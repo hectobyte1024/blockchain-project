@@ -1,0 +1,22 @@
+[package]
+name = "blockchain-ffi"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+# No additional dependencies - this is the FFI layer
+thiserror.workspace = true
+hex.workspace = true
+libc = "0.2"
+serde.workspace = true
+
+[build-dependencies]
+bindgen.workspace = true
+cmake.workspace = true
+cbindgen.workspace = true
+
+# Link to C++ static library
+[package.metadata.pkg-config]
+libblockchain_core = "1.0"

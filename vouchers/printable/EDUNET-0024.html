@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>EduNet Voucher - EDUNET-0024</title>
+    <style>
+        @media print {
+            .no-print { display: none; }
+            body { margin: 0; }
+        }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .voucher {
+            width: 8.5in;
+            height: 11in;
+            margin: 0 auto;
+            padding: 40px;
+            background: white;
+            border: 2px dashed #333;
+            box-sizing: border-box;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #4CAF50;
+            margin: 0;
+            font-size: 36px;
+        }
+        .header h2 {
+            color: #666;
+            margin: 10px 0 0 0;
+            font-size: 24px;
+        }
+        .qr-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .qr-container img {
+            width: 300px;
+            height: 300px;
+            border: 3px solid #4CAF50;
+            padding: 10px;
+            background: white;
+        }
+        .code-box {
+            background: #f9f9f9;
+            border: 2px solid #4CAF50;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            color: #333;
+        }
+        .instructions {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f5e9;
+            border-radius: 10px;
+        }
+        .instructions h3 {
+            color: #4CAF50;
+            margin-top: 0;
+        }
+        .instructions ol {
+            font-size: 18px;
+            line-height: 1.8;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            color: #856404;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            color: #999;
+        }
+        .no-print {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .no-print:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <button class="no-print" onclick="window.print()">🖨️ Print This Voucher</button>
+    <div class="voucher">
+        <div class="header">
+            <h1>🎓 EduNet</h1>
+            <h2>Promotional Voucher</h2>
+        </div>
+        
+        <div class="qr-container">
+            <img src="../qr_images/EDUNET-0024.png" alt="QR Code">
+        </div>
+        
+        <div class="code-box">
+            Voucher Code: EDUNET-0024<br>
+            <small style="font-size: 18px;">PROMO-EDUNET-0024-20EDU</small>
+        </div>
+        
+        <div style="text-align: center; font-size: 28px; color: #4CAF50; font-weight: bold; margin: 20px 0;">
+            ✨ VALUE: 20 EDU TOKENS ✨
+        </div>
+        
+        <div class="instructions">
+            <h3>📱 How to Redeem:</h3>
+            <ol>
+                <li>Visit <strong>http://localhost:8080</strong></li>
+                <li>Create an account or login</li>
+                <li>Click <strong>"Redeem Voucher"</strong></li>
+                <li>Scan the QR code above OR enter the code manually</li>
+                <li>Receive 20 EDU tokens instantly!</li>
+            </ol>
+        </div>
+        
+        <div class="warning">
+            ⚠️ This voucher can only be used ONCE • Keep it secure until redemption
+        </div>
+        
+        <div class="footer">
+            <p>EduNet - Empowering Students with Blockchain Technology</p>
+            <p style="font-size: 12px;">For support, contact: support@edunet.edu</p>
+        </div>
+    </div>
+</body>
+</html>

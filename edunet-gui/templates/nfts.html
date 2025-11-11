@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFTs - Edunet Blockchain</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="/static/js/shared.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Edunet</span>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/marketplace" class="nav-link">
+                        <i class="fas fa-store"></i>
+                        <span>Marketplace</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/loans" class="nav-link">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <span>Loans</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="/nfts" class="nav-link">
+                        <i class="fas fa-palette"></i>
+                        <span>NFTs</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/invest" class="nav-link">
+                        <i class="fas fa-rocket"></i>
+                        <span>Invest</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/wallet" class="nav-link">
+                        <i class="fas fa-wallet"></i>
+                        <span>Wallet</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="sidebar-user-name">Loading...</div>
+                        <div class="user-university" id="sidebar-user-university">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header header-gradient">
+                <div class="header-left">
+                    <h1>NFT System</h1>
+                    <p>Non-Fungible Token infrastructure for the Edunet blockchain</p>
+                </div>
+                <div class="header-right">
+                    <div class="wallet-info">
+                        <i class="fas fa-wallet"></i>
+                        <span class="balance" id="wallet-balance">Loading...</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Development Status -->
+            <div class="development-status">
+                <div class="status-card">
+                    <div class="status-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="status-content">
+                        <h2>NFT System in Development</h2>
+                        <p>The NFT (Non-Fungible Token) infrastructure is currently being built for the Edunet blockchain.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NFT Development Roadmap -->
+            <div class="nft-roadmap">
+                <h2>NFT Implementation Roadmap</h2>
+                <div class="roadmap-grid">
+                    <div class="roadmap-item">
+                        <div class="roadmap-status completed">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="roadmap-content">
+                            <h3>Blockchain Foundation</h3>
+                            <p>Core blockchain infrastructure with transaction support</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-status in-progress">
+                            <i class="fas fa-cog fa-spin"></i>
+                        </div>
+                        <div class="roadmap-content">
+                            <h3>Smart Contract System</h3>
+                            <p>Smart contract virtual machine for NFT logic</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-status planned">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="roadmap-content">
+                            <h3>NFT Token Standard</h3>
+                            <p>ERC-721-like NFT token implementation</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-status planned">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="roadmap-content">
+                            <h3>Metadata Storage</h3>
+                            <p>IPFS integration for decentralized NFT metadata</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-status planned">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="roadmap-content">
+                            <h3>Minting Interface</h3>
+                            <p>User-friendly NFT creation and minting tools</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-status planned">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="roadmap-content">
+                            <h3>Trading Marketplace</h3>
+                            <p>NFT marketplace for buying and selling</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Capabilities -->
+            <div class="current-capabilities">
+                <h2>Current Blockchain Capabilities</h2>
+                <div class="capabilities-grid">
+                    <div class="capability-card">
+                        <i class="fas fa-coins"></i>
+                        <h3>EDU Token Transfers</h3>
+                        <p>Send and receive EDU tokens between wallet addresses</p>
+                    </div>
+                    
+                    <div class="capability-card">
+                        <i class="fas fa-lock"></i>
+                        <h3>Cryptographic Security</h3>
+                        <p>SHA-256 based proof-of-work consensus mechanism</p>
+                    </div>
+                    
+                    <div class="capability-card">
+                        <i class="fas fa-network-wired"></i>
+                        <h3>P2P Network</h3>
+                        <p>Distributed blockchain network communication</p>
+                    </div>
+                    
+                    <div class="capability-card">
+                        <i class="fas fa-cubes"></i>
+                        <h3>Block Mining</h3>
+                        <p>Decentralized mining with adjustable difficulty</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mint NFT Modal -->
+    <div id="mint-nft-modal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h2>Mint New NFT</h2>
+                <button class="modal-close" onclick="closeMintModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="mint-nft-form" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nft-title">Title *</label>
+                        <input type="text" id="nft-title" name="title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nft-category">Category *</label>
+                        <select id="nft-category" name="category" required>
+                            <option value="">Select Category</option>
+                            <option value="research">Research Paper</option>
+                            <option value="art">Digital Art</option>
+                            <option value="music">Music & Audio</option>
+                            <option value="code">Software & Code</option>
+                            <option value="data">Dataset</option>
+                            <option value="video">Video Course</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nft-description">Description *</label>
+                    <textarea id="nft-description" name="description" rows="4" required></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nft-price">Price (EDU)</label>
+                        <input type="number" id="nft-price" name="price" min="0" step="0.01">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nft-royalty">Royalty Percentage</label>
+                        <input type="number" id="nft-royalty" name="royalty" min="0" max="50" value="10">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nft-file">Upload File *</label>
+                    <input type="file" id="nft-file" name="file" required>
+                    <small>Supported formats: PDF, PNG, JPG, MP3, MP4, ZIP (max 100MB)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nft-metadata">Additional Metadata (JSON)</label>
+                    <textarea id="nft-metadata" name="metadata" rows="3" placeholder='{"author": "Your Name", "institution": "Your University"}'></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeMintModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Mint NFT (Fee: 5 EDU)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function closeMintModal() {
+            document.getElementById('mint-nft-modal').classList.remove('show');
+        }
+        
+        // Category tab switching
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const category = tab.dataset.category;
+                filterNFTsByCategory(category);
+            });
+        });
+        
+        function filterNFTsByCategory(category) {
+            const nftCards = document.querySelectorAll('.nft-card');
+            nftCards.forEach(card => {
+                if (category === 'all') {
+                    card.style.display = 'block';
+                } else {
+                    const cardCategory = card.querySelector('.nft-badge').textContent.toLowerCase();
+                    const matches = cardCategory.includes(category) || 
+                                  (category === 'research' && cardCategory === 'research') ||
+                                  (category === 'art' && cardCategory === 'digital art') ||
+                                  (category === 'code' && cardCategory === 'software') ||
+                                  (category === 'data' && cardCategory === 'dataset') ||
+                                  (category === 'music' && cardCategory === 'music');
+                    card.style.display = matches ? 'block' : 'none';
+                }
+            });
+        }
+        
+        // Mint NFT button handlers
+        document.querySelectorAll('.mint-category button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.getElementById('mint-nft-modal').classList.add('show');
+            });
+        });
+        
+        // Header mint button
+        document.querySelector('.header-right .btn-primary').addEventListener('click', () => {
+            document.getElementById('mint-nft-modal').classList.add('show');
+        });
+
+        // Initialize global EdunetApp
+        if (typeof EdunetApp !== 'undefined') {
+            window.edunetApp = new EdunetApp();
+            console.log('EdunetApp initialized successfully');
+        } else {
+            console.error('EdunetApp class not found - shared.js may not have loaded');
+        }
+    </script>
+</body>
+</html>

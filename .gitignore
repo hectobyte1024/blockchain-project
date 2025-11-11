@@ -1,0 +1,58 @@
+# Build artifacts
+target/
+build/
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+/tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+cookies.txt
+*.tmp
+
+# Database
+*.db
+*.sqlite
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+
+# Node modules (if any)
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+
+# Rust
+Cargo.lock
+**/*.rs.bk
+
+# Binaries
+cpp-core/simple_storage_test
+edunet-gui/edunet-gui

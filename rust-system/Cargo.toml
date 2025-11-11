@@ -1,0 +1,93 @@
+[workspace]
+resolver = "2"
+members = [
+    "blockchain-core",
+    "blockchain-consensus-ffi",
+    "blockchain-ffi",
+    "blockchain-network",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Blockchain Developer <dev@blockchain.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/username/rust-blockchain"
+rust-version = "1.70"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+tokio-util = { version = "0.7", features = ["full"] }
+futures = "0.3"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
+postcard = { version = "1.0", features = ["alloc"] }
+
+# Cryptography
+sha2 = "0.10"
+ripemd = "0.1"
+secp256k1 = { version = "0.28", features = ["rand", "recovery", "global-context"] }
+hmac = "0.12"
+pbkdf2 = "0.12"
+rand = "0.8"
+rand_core = { version = "0.6", features = ["getrandom"] }
+
+# Networking
+libp2p = { version = "0.53", features = ["tcp", "mdns", "noise", "yamux", "gossipsub", "kad"] }
+quinn = "0.10" # QUIC protocol
+
+# Storage
+rocksdb = "0.21"
+redb = "1.4"
+
+# Encoding
+hex = "0.4"
+base58 = "0.2"
+bech32 = "0.9"
+
+# Utilities
+thiserror = "1.0"
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4.4", features = ["derive"] }
+config = "0.14"
+
+# Performance
+rayon = "1.8"
+crossbeam = "0.8"
+parking_lot = "0.12"
+
+# Testing
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.4"
+
+# Web-specific dependencies
+wasm-bindgen = "0.2"
+js-sys = "0.3" 
+web-sys = "0.3"
+
+# FFI dependencies
+bindgen = "0.69"
+cbindgen = "0.26"
+cmake = "0.1"
+
+# Profile configurations
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.dev]
+opt-level = 0
+debug = true
+split-debuginfo = "unpacked"
+
+[profile.bench]
+opt-level = 3
+debug = true

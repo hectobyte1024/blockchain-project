@@ -1,0 +1,15 @@
+[package]
+name = "blockchain-consensus-ffi"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+# FFI and linking
+libc = "0.2"
+
+# Build script dependencies  
+[build-dependencies]
+bindgen = "0.69"
+cc = "1.0"

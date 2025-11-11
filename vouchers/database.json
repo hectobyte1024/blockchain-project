@@ -1,0 +1,602 @@
+[
+  {
+    "id": "EDUNET-0001",
+    "code": "PROMO-EDUNET-0001-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0002",
+    "code": "PROMO-EDUNET-0002-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0003",
+    "code": "PROMO-EDUNET-0003-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0004",
+    "code": "PROMO-EDUNET-0004-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0005",
+    "code": "PROMO-EDUNET-0005-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0006",
+    "code": "PROMO-EDUNET-0006-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0007",
+    "code": "PROMO-EDUNET-0007-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0008",
+    "code": "PROMO-EDUNET-0008-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0009",
+    "code": "PROMO-EDUNET-0009-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0010",
+    "code": "PROMO-EDUNET-0010-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0011",
+    "code": "PROMO-EDUNET-0011-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0012",
+    "code": "PROMO-EDUNET-0012-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0013",
+    "code": "PROMO-EDUNET-0013-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0014",
+    "code": "PROMO-EDUNET-0014-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0015",
+    "code": "PROMO-EDUNET-0015-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0016",
+    "code": "PROMO-EDUNET-0016-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0017",
+    "code": "PROMO-EDUNET-0017-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0018",
+    "code": "PROMO-EDUNET-0018-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0019",
+    "code": "PROMO-EDUNET-0019-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0020",
+    "code": "PROMO-EDUNET-0020-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0021",
+    "code": "PROMO-EDUNET-0021-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0022",
+    "code": "PROMO-EDUNET-0022-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0023",
+    "code": "PROMO-EDUNET-0023-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0024",
+    "code": "PROMO-EDUNET-0024-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0025",
+    "code": "PROMO-EDUNET-0025-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0026",
+    "code": "PROMO-EDUNET-0026-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0027",
+    "code": "PROMO-EDUNET-0027-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0028",
+    "code": "PROMO-EDUNET-0028-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0029",
+    "code": "PROMO-EDUNET-0029-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0030",
+    "code": "PROMO-EDUNET-0030-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0031",
+    "code": "PROMO-EDUNET-0031-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0032",
+    "code": "PROMO-EDUNET-0032-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0033",
+    "code": "PROMO-EDUNET-0033-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0034",
+    "code": "PROMO-EDUNET-0034-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0035",
+    "code": "PROMO-EDUNET-0035-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0036",
+    "code": "PROMO-EDUNET-0036-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0037",
+    "code": "PROMO-EDUNET-0037-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0038",
+    "code": "PROMO-EDUNET-0038-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0039",
+    "code": "PROMO-EDUNET-0039-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0040",
+    "code": "PROMO-EDUNET-0040-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0041",
+    "code": "PROMO-EDUNET-0041-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0042",
+    "code": "PROMO-EDUNET-0042-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0043",
+    "code": "PROMO-EDUNET-0043-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0044",
+    "code": "PROMO-EDUNET-0044-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0045",
+    "code": "PROMO-EDUNET-0045-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0046",
+    "code": "PROMO-EDUNET-0046-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0047",
+    "code": "PROMO-EDUNET-0047-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0048",
+    "code": "PROMO-EDUNET-0048-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0049",
+    "code": "PROMO-EDUNET-0049-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0050",
+    "code": "PROMO-EDUNET-0050-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0051",
+    "code": "PROMO-EDUNET-0051-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0052",
+    "code": "PROMO-EDUNET-0052-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0053",
+    "code": "PROMO-EDUNET-0053-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0054",
+    "code": "PROMO-EDUNET-0054-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0055",
+    "code": "PROMO-EDUNET-0055-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0056",
+    "code": "PROMO-EDUNET-0056-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0057",
+    "code": "PROMO-EDUNET-0057-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0058",
+    "code": "PROMO-EDUNET-0058-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0059",
+    "code": "PROMO-EDUNET-0059-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0060",
+    "code": "PROMO-EDUNET-0060-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0061",
+    "code": "PROMO-EDUNET-0061-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0062",
+    "code": "PROMO-EDUNET-0062-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0063",
+    "code": "PROMO-EDUNET-0063-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0064",
+    "code": "PROMO-EDUNET-0064-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0065",
+    "code": "PROMO-EDUNET-0065-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0066",
+    "code": "PROMO-EDUNET-0066-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0067",
+    "code": "PROMO-EDUNET-0067-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0068",
+    "code": "PROMO-EDUNET-0068-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0069",
+    "code": "PROMO-EDUNET-0069-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0070",
+    "code": "PROMO-EDUNET-0070-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0071",
+    "code": "PROMO-EDUNET-0071-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0072",
+    "code": "PROMO-EDUNET-0072-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0073",
+    "code": "PROMO-EDUNET-0073-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0074",
+    "code": "PROMO-EDUNET-0074-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0075",
+    "code": "PROMO-EDUNET-0075-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0076",
+    "code": "PROMO-EDUNET-0076-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0077",
+    "code": "PROMO-EDUNET-0077-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0078",
+    "code": "PROMO-EDUNET-0078-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0079",
+    "code": "PROMO-EDUNET-0079-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0080",
+    "code": "PROMO-EDUNET-0080-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0081",
+    "code": "PROMO-EDUNET-0081-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0082",
+    "code": "PROMO-EDUNET-0082-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0083",
+    "code": "PROMO-EDUNET-0083-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0084",
+    "code": "PROMO-EDUNET-0084-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0085",
+    "code": "PROMO-EDUNET-0085-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0086",
+    "code": "PROMO-EDUNET-0086-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0087",
+    "code": "PROMO-EDUNET-0087-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0088",
+    "code": "PROMO-EDUNET-0088-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0089",
+    "code": "PROMO-EDUNET-0089-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0090",
+    "code": "PROMO-EDUNET-0090-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0091",
+    "code": "PROMO-EDUNET-0091-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0092",
+    "code": "PROMO-EDUNET-0092-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0093",
+    "code": "PROMO-EDUNET-0093-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0094",
+    "code": "PROMO-EDUNET-0094-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0095",
+    "code": "PROMO-EDUNET-0095-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0096",
+    "code": "PROMO-EDUNET-0096-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0097",
+    "code": "PROMO-EDUNET-0097-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0098",
+    "code": "PROMO-EDUNET-0098-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0099",
+    "code": "PROMO-EDUNET-0099-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  },
+  {
+    "id": "EDUNET-0100",
+    "code": "PROMO-EDUNET-0100-20EDU",
+    "amount": 20,
+    "status": "unclaimed"
+  }
+]

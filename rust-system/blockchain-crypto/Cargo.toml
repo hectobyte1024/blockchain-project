@@ -1,0 +1,35 @@
+[package]
+name = "blockchain-crypto"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+# Cryptographic primitives
+sha2.workspace = true
+ripemd.workspace = true
+secp256k1.workspace = true
+hmac.workspace = true
+pbkdf2.workspace = true
+rand.workspace = true
+rand_core.workspace = true
+
+# Serialization and encoding
+serde.workspace = true
+hex.workspace = true
+base58.workspace = true
+bech32.workspace = true
+
+# Error handling
+thiserror.workspace = true
+anyhow.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+proptest.workspace = true
+
+# Benchmark disabled for now
+# [[bench]]
+# name = "crypto_bench"
+# harness = false
