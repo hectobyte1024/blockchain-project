@@ -348,7 +348,7 @@ async fn main() -> anyhow::Result<()> {
     // Build the application router
     let app = Router::new()
         // Static files
-        .nest_service("/static", ServeDir::new("static"))
+        .nest_service("/static", ServeDir::new("edunet-gui/static"))
         
         // Authentication pages
         .route("/", get(login_page))
