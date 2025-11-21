@@ -12,7 +12,6 @@ use axum::{
     body::Body,
 };
 use serde::{Deserialize, Serialize};
-// use sqlx::SqlitePool;
 use std::{sync::Arc, collections::HashMap};
 use tokio::{net::TcpListener, sync::Mutex};
 use sha2::{Sha256, Digest};
@@ -28,9 +27,11 @@ use rand;
 
 mod blockchain_integration;
 mod user_auth;
+mod database;
 
 use crate::blockchain_integration::{BlockchainBackend, TransactionHistory, TransactionStatus};
 use crate::user_auth::{UserManager, User, LoginRequest, RegisterRequest};
+use crate::database::Database;
 
 /// Application state shared across handlers
 #[derive(Clone)]
@@ -38,6 +39,7 @@ pub struct AppState {
     pub backend: Arc<BlockchainBackend>,
     pub user_manager: Arc<UserManager>,
     pub marketplace: Arc<MarketplaceManager>,
+    pub database: Arc<Database>,
 }
 
 /// Student user model
@@ -321,13 +323,23 @@ async fn main() -> anyhow::Result<()> {
 
     info!("🌐 Starting EduNet GUI with blockchain backend...");
     
+    // Initialize database
+    let database_url = std::env::var("DATABASE_URL")
+        .unwrap_or_else(|_| "sqlite:./edunet-gui/edunet.db".to_string());
+    info!("📊 Connecting to database: {}", database_url);
+    let database = Arc::new(Database::new(&database_url).await?);
+    info!("✅ Database initialized");
+    
     // Initialize blockchain backend
-    let backend = BlockchainBackend::new(is_bootstrap, bootstrap_server).await?;
+    let backend = BlockchainBackend::new(is_bootstrap, bootstrap_server, database.clone()).await?;
     
-    // Initialize user management system
-    let user_manager = Arc::new(UserManager::new(backend.wallets.clone()));
+    // Initialize user management system with database
+    let user_manager = Arc::new(UserManager::new(backend.wallets.clone(), database.clone()));
     
-    // Create demo users for testing
+    // Load existing users from database
+    user_manager.load_users_from_db().await.map_err(|e| anyhow::anyhow!(e))?;
+    
+    // Create demo users for testing (if they don't exist)
     user_manager.create_demo_users().await.map_err(|e| anyhow::anyhow!(e))?;
     
     let backend = Arc::new(backend);
@@ -337,6 +349,7 @@ async fn main() -> anyhow::Result<()> {
         backend,
         user_manager,
         marketplace,
+        database,
     };
 
     if is_bootstrap {
@@ -398,6 +411,19 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/blockchain/transactions/recent", get(api_get_recent_transactions))
         .route("/api/blockchain/mine", post(api_mine_block))
         .route("/api/blockchain/network-status", get(api_network_status))
+        
+        // NFT API routes
+        .route("/api/nft/mint", post(api_nft_mint))
+        .route("/api/nft/list", get(api_nft_list))
+        .route("/api/nft/owned/:address", get(api_nft_owned))
+        .route("/api/nft/:id", get(api_nft_get))
+        .route("/api/nft/transfer", post(api_nft_transfer))
+        
+        // Loan API routes
+        .route("/api/loan/apply", post(api_loan_apply))
+        .route("/api/loan/list", get(api_loan_list))
+        .route("/api/loan/:id", get(api_loan_get))
+        .route("/api/loan/fund", post(api_loan_fund))
         
         .layer(CorsLayer::permissive())
         .with_state(state);
@@ -1779,5 +1805,449 @@ async fn api_network_status(
 async fn get_user_statistics(State(state): State<AppState>) -> impl IntoResponse {
     let stats = state.user_manager.get_user_stats().await;
     Json(ApiResponse::success(stats))
+}
+
+// ==================== NFT API HANDLERS ====================
+
+#[derive(Debug, Deserialize)]
+struct NftMintRequest {
+    name: String,
+    description: Option<String>,
+    image_url: Option<String>,
+    metadata: Option<String>,
+}
+
+async fn api_nft_mint(
+    headers: HeaderMap,
+    State(state): State<AppState>,
+    Json(request): Json<NftMintRequest>,
+) -> impl IntoResponse {
+    let user = match get_current_user(&headers, &state).await {
+        Ok(u) => u,
+        Err(_) => return Json(serde_json::json!({
+            "success": false,
+            "message": "Authentication required"
+        })),
+    };
+
+    info!("🎨 Minting NFT: {} for user {}", request.name, user.username);
+
+    // Create NFT transaction (1 satoshi UTXO with NFT metadata)
+    let nft_id = format!("nft_{}", Uuid::new_v4().simple());
+    let timestamp = Utc::now().timestamp();
+
+    // Send 1 satoshi transaction to represent NFT
+    let tx_result = state.backend.send_transaction(
+        &user.wallet_address,
+        &user.wallet_address, // NFT owned by creator initially
+        1, // 1 satoshi
+        Some(format!("NFT_MINT:{}", nft_id))
+    ).await;
+
+    match tx_result {
+        Ok(tx_hash) => {
+            // Save NFT to database
+            let nft = crate::database::DbNft {
+                id: None,
+                nft_id: nft_id.clone(),
+                name: request.name.clone(),
+                description: request.description.clone(),
+                image_url: request.image_url.clone(),
+                creator_address: user.wallet_address.clone(),
+                current_owner: user.wallet_address.clone(),
+                metadata: request.metadata.clone(),
+                mint_tx_hash: tx_hash.clone(),
+                mint_timestamp: timestamp,
+                is_burned: false,
+            };
+
+            match state.database.mint_nft(&nft).await {
+                Ok(_) => {
+                    info!("✅ NFT minted: {} (tx: {})", nft_id, tx_hash);
+                    Json(serde_json::json!({
+                        "success": true,
+                        "nft_id": nft_id,
+                        "tx_hash": tx_hash,
+                        "message": "NFT minted successfully"
+                    }))
+                }
+                Err(e) => {
+                    error!("❌ Failed to save NFT to database: {}", e);
+                    Json(serde_json::json!({
+                        "success": false,
+                        "message": format!("Failed to save NFT: {}", e)
+                    }))
+                }
+            }
+        }
+        Err(e) => {
+            error!("❌ Failed to create NFT transaction: {}", e);
+            Json(serde_json::json!({
+                "success": false,
+                "message": format!("Failed to mint NFT: {}", e)
+            }))
+        }
+    }
+}
+
+async fn api_nft_list(State(state): State<AppState>) -> impl IntoResponse {
+    match state.database.list_all_nfts(100).await {
+        Ok(nfts) => Json(serde_json::json!({
+            "success": true,
+            "nfts": nfts
+        })),
+        Err(e) => {
+            error!("❌ Failed to list NFTs: {}", e);
+            Json(serde_json::json!({
+                "success": false,
+                "message": format!("Failed to list NFTs: {}", e)
+            }))
+        }
+    }
+}
+
+async fn api_nft_owned(
+    Path(address): Path<String>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    match state.database.get_nfts_by_owner(&address).await {
+        Ok(nfts) => Json(serde_json::json!({
+            "success": true,
+            "nfts": nfts,
+            "count": nfts.len()
+        })),
+        Err(e) => {
+            error!("❌ Failed to get NFTs for {}: {}", address, e);
+            Json(serde_json::json!({
+                "success": false,
+                "message": format!("Failed to get NFTs: {}", e)
+            }))
+        }
+    }
+}
+
+async fn api_nft_get(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    match state.database.get_nft_by_id(&id).await {
+        Ok(Some(nft)) => Json(serde_json::json!({
+            "success": true,
+            "nft": nft
+        })),
+        Ok(None) => Json(serde_json::json!({
+            "success": false,
+            "message": "NFT not found"
+        })),
+        Err(e) => {
+            error!("❌ Failed to get NFT {}: {}", id, e);
+            Json(serde_json::json!({
+                "success": false,
+                "message": format!("Failed to get NFT: {}", e)
+            }))
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct NftTransferRequest {
+    nft_id: String,
+    to_address: String,
+}
+
+async fn api_nft_transfer(
+    headers: HeaderMap,
+    State(state): State<AppState>,
+    Json(request): Json<NftTransferRequest>,
+) -> impl IntoResponse {
+    let user = match get_current_user(&headers, &state).await {
+        Ok(u) => u,
+        Err(_) => return Json(serde_json::json!({
+            "success": false,
+            "message": "Authentication required"
+        })),
+    };
+
+    // Get NFT to verify ownership
+    let nft = match state.database.get_nft_by_id(&request.nft_id).await {
+        Ok(Some(n)) => n,
+        Ok(None) => return Json(serde_json::json!({
+            "success": false,
+            "message": "NFT not found"
+        })),
+        Err(e) => return Json(serde_json::json!({
+            "success": false,
+            "message": format!("Error: {}", e)
+        })),
+    };
+
+    // Verify user owns the NFT
+    if nft.current_owner != user.wallet_address {
+        return Json(serde_json::json!({
+            "success": false,
+            "message": "You don't own this NFT"
+        }));
+    }
+
+    // Transfer NFT (send 1 satoshi transaction)
+    match state.backend.send_transaction(
+        &user.wallet_address,
+        &request.to_address,
+        1,
+        Some(format!("NFT_TRANSFER:{}", request.nft_id))
+    ).await {
+        Ok(tx_hash) => {
+            // Update NFT ownership in database
+            match state.database.transfer_nft(
+                &request.nft_id,
+                &user.wallet_address,
+                &request.to_address,
+                &tx_hash,
+                Utc::now().timestamp()
+            ).await {
+                Ok(_) => {
+                    info!("✅ NFT transferred: {} to {}", request.nft_id, request.to_address);
+                    Json(serde_json::json!({
+                        "success": true,
+                        "tx_hash": tx_hash,
+                        "message": "NFT transferred successfully"
+                    }))
+                }
+                Err(e) => {
+                    error!("❌ Failed to update NFT ownership: {}", e);
+                    Json(serde_json::json!({
+                        "success": false,
+                        "message": format!("Failed to update NFT: {}", e)
+                    }))
+                }
+            }
+        }
+        Err(e) => {
+            error!("❌ Failed to transfer NFT: {}", e);
+            Json(serde_json::json!({
+                "success": false,
+                "message": format!("Failed to transfer NFT: {}", e)
+            }))
+        }
+    }
+}
+
+// ==================== LOAN API HANDLERS ====================
+
+#[derive(Debug, Deserialize)]
+struct LoanApplicationRequest {
+    full_name: String,
+    university: String,
+    field_of_study: String,
+    gpa: Option<f64>,
+    test_score: Option<i32>,
+    achievements: Option<String>,
+    requested_amount: i64,
+    interest_rate: Option<f64>,
+    repayment_term_months: Option<i32>,
+    loan_purpose: Option<String>,
+    graduation_year: Option<i32>,
+    expected_career: Option<String>,
+    expected_salary: Option<i64>,
+}
+
+async fn api_loan_apply(
+    headers: HeaderMap,
+    State(state): State<AppState>,
+    Json(request): Json<LoanApplicationRequest>,
+) -> impl IntoResponse {
+    let user = match get_current_user(&headers, &state).await {
+        Ok(u) => u,
+        Err(_) => return Json(serde_json::json!({
+            "success": false,
+            "message": "Authentication required"
+        })),
+    };
+
+    info!("📋 Loan application from {}: {} EDU", user.username, request.requested_amount as f64 / 100_000_000.0);
+
+    // Calculate Proof-of-Potential score
+    let mut score = 5.0; // Base score
+    if let Some(gpa) = request.gpa {
+        score += (gpa / 4.0) * 2.5; // Up to 2.5 points for GPA
+    }
+    if let Some(test_score) = request.test_score {
+        score += (test_score as f64 / 1600.0) * 2.5; // Up to 2.5 points for test scores
+    }
+
+    let loan_id = format!("loan_{}", Uuid::new_v4().simple());
+    
+    let loan = crate::database::DbLoanApplication {
+        id: None,
+        loan_id: loan_id.clone(),
+        applicant_username: user.username.clone(),
+        applicant_address: user.wallet_address.clone(),
+        full_name: request.full_name,
+        university: request.university,
+        field_of_study: request.field_of_study,
+        gpa: request.gpa,
+        test_score: request.test_score,
+        achievements: request.achievements,
+        requested_amount: request.requested_amount,
+        interest_rate: request.interest_rate,
+        repayment_term_months: request.repayment_term_months,
+        loan_purpose: request.loan_purpose,
+        graduation_year: request.graduation_year,
+        expected_career: request.expected_career,
+        expected_salary: request.expected_salary,
+        proof_of_potential_score: Some(score),
+        status: "pending".to_string(),
+        funded_amount: 0,
+        funding_tx_hash: None,
+    };
+
+    match state.database.create_loan_application(&loan).await {
+        Ok(_) => {
+            info!("✅ Loan application created: {} (score: {:.1})", loan_id, score);
+            Json(serde_json::json!({
+                "success": true,
+                "loan_id": loan_id,
+                "proof_of_potential_score": score,
+                "message": "Loan application submitted successfully"
+            }))
+        }
+        Err(e) => {
+            error!("❌ Failed to create loan application: {}", e);
+            Json(serde_json::json!({
+                "success": false,
+                "message": format!("Failed to submit loan application: {}", e)
+            }))
+        }
+    }
+}
+
+async fn api_loan_list(
+    Query(params): Query<HashMap<String, String>>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let status = params.get("status").map(|s| s.as_str()).unwrap_or("pending");
+    let limit = params.get("limit").and_then(|s| s.parse::<i64>().ok()).unwrap_or(50);
+
+    match state.database.list_loans_by_status(status, limit).await {
+        Ok(loans) => Json(serde_json::json!({
+            "success": true,
+            "loans": loans,
+            "count": loans.len()
+        })),
+        Err(e) => {
+            error!("❌ Failed to list loans: {}", e);
+            Json(serde_json::json!({
+                "success": false,
+                "message": format!("Failed to list loans: {}", e)
+            }))
+        }
+    }
+}
+
+async fn api_loan_get(
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    match state.database.get_loan_by_id(&id).await {
+        Ok(Some(loan)) => Json(serde_json::json!({
+            "success": true,
+            "loan": loan
+        })),
+        Ok(None) => Json(serde_json::json!({
+            "success": false,
+            "message": "Loan not found"
+        })),
+        Err(e) => {
+            error!("❌ Failed to get loan {}: {}", id, e);
+            Json(serde_json::json!({
+                "success": false,
+                "message": format!("Failed to get loan: {}", e)
+            }))
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct LoanFundRequest {
+    loan_id: String,
+    amount: i64,
+}
+
+async fn api_loan_fund(
+    headers: HeaderMap,
+    State(state): State<AppState>,
+    Json(request): Json<LoanFundRequest>,
+) -> impl IntoResponse {
+    let user = match get_current_user(&headers, &state).await {
+        Ok(u) => u,
+        Err(_) => return Json(serde_json::json!({
+            "success": false,
+            "message": "Authentication required"
+        })),
+    };
+
+    // Get loan details
+    let loan = match state.database.get_loan_by_id(&request.loan_id).await {
+        Ok(Some(l)) => l,
+        Ok(None) => return Json(serde_json::json!({
+            "success": false,
+            "message": "Loan not found"
+        })),
+        Err(e) => return Json(serde_json::json!({
+            "success": false,
+            "message": format!("Error: {}", e)
+        })),
+    };
+
+    if loan.status != "pending" && loan.status != "approved" {
+        return Json(serde_json::json!({
+            "success": false,
+            "message": "Loan is not available for funding"
+        }));
+    }
+
+    info!("💰 Funding loan {} with {} EDU from {}", request.loan_id, request.amount as f64 / 100_000_000.0, user.username);
+
+    // Send funding transaction
+    match state.backend.send_transaction(
+        &user.wallet_address,
+        &loan.applicant_address,
+        request.amount as u64,
+        Some(format!("LOAN_FUNDING:{}", request.loan_id))
+    ).await {
+        Ok(tx_hash) => {
+            // Record funding in database
+            match state.database.fund_loan(
+                &request.loan_id,
+                &user.wallet_address,
+                request.amount,
+                &tx_hash,
+                Utc::now().timestamp()
+            ).await {
+                Ok(_) => {
+                    info!("✅ Loan funded: {} by {} (tx: {})", request.loan_id, user.username, tx_hash);
+                    Json(serde_json::json!({
+                        "success": true,
+                        "tx_hash": tx_hash,
+                        "message": "Loan funded successfully"
+                    }))
+                }
+                Err(e) => {
+                    error!("❌ Failed to record loan funding: {}", e);
+                    Json(serde_json::json!({
+                        "success": false,
+                        "message": format!("Failed to record funding: {}", e)
+                    }))
+                }
+            }
+        }
+        Err(e) => {
+            error!("❌ Failed to send funding transaction: {}", e);
+            Json(serde_json::json!({
+                "success": false,
+                "message": format!("Failed to fund loan: {}", e)
+            }))
+        }
+    }
 }
 

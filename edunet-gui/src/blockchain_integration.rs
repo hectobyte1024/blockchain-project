@@ -16,6 +16,7 @@ use blockchain_core::{
     Hash256, Amount, Result as BlockchainResult,
 };
 use blockchain_network::{NetworkManager, NetworkConfig};
+use crate::database::{Database, DbTransaction};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
@@ -76,13 +77,15 @@ pub struct BlockchainBackend {
     pub mining_controller: Arc<RwLock<MiningController>>,
     pub utxo_set: Arc<RwLock<UTXOSet>>,
     pub tx_manager: Arc<TransactionManager>,
-    // In-memory transaction storage
+    // Database for persistent storage
+    pub database: Arc<Database>,
+    // In-memory transaction storage (for compatibility)
     pub transactions: Arc<RwLock<HashMap<String, TransactionHistory>>>,
     pub blocks_mined: Arc<RwLock<Vec<String>>>,
 }
 
 impl BlockchainBackend {
-    pub async fn new(is_bootstrap: bool, server_address: Option<String>) -> anyhow::Result<Self> {
+    pub async fn new(is_bootstrap: bool, server_address: Option<String>, database: Arc<Database>) -> anyhow::Result<Self> {
         tracing::info!("🚀 Initializing PRODUCTION EduNet blockchain backend (REAL BLOCKCHAIN)...");
 
         // Create network configuration
@@ -152,6 +155,7 @@ impl BlockchainBackend {
             mining_controller,
             utxo_set,
             tx_manager,
+            database,
             transactions: Arc::new(RwLock::new(HashMap::new())),
             blocks_mined: Arc::new(RwLock::new(Vec::new())),
         })

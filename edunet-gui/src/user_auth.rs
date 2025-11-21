@@ -9,6 +9,7 @@ use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use sha2::{Sha256, Digest};
 use blockchain_core::wallet::{WalletManager, Wallet};
+use crate::database::Database;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
@@ -55,17 +56,56 @@ pub struct UserManager {
     username_to_id: Arc<RwLock<HashMap<String, Uuid>>>,
     email_to_id: Arc<RwLock<HashMap<String, Uuid>>>,
     wallet_manager: Arc<tokio::sync::RwLock<WalletManager>>,
+    database: Arc<Database>,
 }
 
 impl UserManager {
-    pub fn new(wallet_manager: Arc<tokio::sync::RwLock<WalletManager>>) -> Self {
+    pub fn new(wallet_manager: Arc<tokio::sync::RwLock<WalletManager>>, database: Arc<Database>) -> Self {
         Self {
             users: Arc::new(RwLock::new(HashMap::new())),
             sessions: Arc::new(RwLock::new(HashMap::new())),
             username_to_id: Arc::new(RwLock::new(HashMap::new())),
             email_to_id: Arc::new(RwLock::new(HashMap::new())),
             wallet_manager,
+            database,
         }
+    }
+
+    // Load users from database into cache
+    pub async fn load_users_from_db(&self) -> Result<(), String> {
+        let db_users = self.database.list_all_users().await
+            .map_err(|e| format!("Failed to load users from database: {}", e))?;
+
+        let mut users = self.users.write().await;
+        let mut username_map = self.username_to_id.write().await;
+        let mut email_map = self.email_to_id.write().await;
+
+        for db_user in db_users {
+            let user_id = Uuid::new_v4(); // Generate new UUID for runtime
+            let user = User {
+                id: user_id,
+                username: db_user.username.clone(),
+                email: db_user.email.clone().unwrap_or_default(),
+                password_hash: db_user.password_hash.clone(),
+                wallet_id: Uuid::new_v4(), // Not used with new wallet system
+                wallet_address: db_user.wallet_address.clone(),
+                university: None,
+                student_id: None,
+                reputation_score: 100.0,
+                created_at: db_user.created_at,
+                last_login: db_user.last_login,
+                is_verified: db_user.is_active,
+            };
+
+            users.insert(user_id, user.clone());
+            username_map.insert(db_user.username.clone(), user_id);
+            if let Some(email) = db_user.email {
+                email_map.insert(email, user_id);
+            }
+        }
+
+        tracing::info!("✅ Loaded {} users from database", users.len());
+        Ok(())
     }
 
     // Hash password with salt
@@ -108,6 +148,15 @@ impl UserManager {
         let user_id = Uuid::new_v4();
         let password_hash = Self::hash_password(&request.password);
 
+        // Save to database first
+        let private_key_hex = hex::encode(&wallet.private_key);
+        self.database.create_user(
+            &request.username,
+            &password_hash,
+            &wallet.address,
+            &private_key_hex
+        ).await.map_err(|e| format!("Failed to save user to database: {}", e))?;
+
         let user = User {
             id: user_id,
             username: request.username.clone(),
@@ -123,7 +172,7 @@ impl UserManager {
             is_verified: false,
         };
 
-        // Store user and mappings
+        // Store user and mappings in cache
         users.insert(user_id, user.clone());
         username_map.insert(request.username, user_id);
         email_map.insert(request.email, user_id);
@@ -147,7 +196,10 @@ impl UserManager {
             return Err("Invalid username or password".to_string());
         }
 
-        // Update last login
+        // Update last login in database
+        let _ = self.database.update_last_login(&request.username).await;
+
+        // Update last login in cache
         user.last_login = Some(Utc::now());
 
         // Create session
