@@ -102,7 +102,7 @@ sudo bash deploy-home-server.sh
 - ✅ Transaction fees (0.1% minimum 1000 satoshis)
 - ✅ Block mining (PoW)
 - ✅ Consensus validation
-- ✅ 2M EDU total supply
+- ✅ 10M EDU total supply
 
 ---
 

@@ -19,7 +19,7 @@ Visit: https://yourdomain.com
 - Participate in decentralized learning
 
 Network Stats:
-- 2M EDU tokens in genesis
+- 10M EDU tokens in genesis
 - Real transactions on real blockchain
 - Student-focused DeFi platform
 ```
@@ -112,7 +112,7 @@ Earn mining rewards in EDU tokens!"
 - [ ] Domain pointing correctly
 - [ ] SSL certificate working
 - [ ] All API endpoints tested
-- [ ] Genesis block verified (2M EDU)
+- [ ] Genesis block verified (10M EDU)
 - [ ] Web interface fully functional
 - [ ] Social media accounts created
 - [ ] Launch announcement prepared

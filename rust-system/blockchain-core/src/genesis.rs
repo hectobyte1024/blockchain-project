@@ -26,35 +26,35 @@ impl Default for GenesisConfig {
     fn default() -> Self {
         Self {
             initial_accounts: vec![
-                // Total Supply: 2,000,000 EDU (200,000,000,000,000 satoshis)
+                // Total Supply: 10,000,000 EDU (1,000,000,000,000,000 satoshis)
                 GenesisAccount {
                     address: "edu1qGenesis00000000000000000000".to_string(),
-                    balance: 10000000000000, // 100,000 EDU - Genesis distribution pool
+                    balance: 50000000000000, // 500,000 EDU - Genesis distribution pool
                     description: "Genesis Distribution Pool".to_string(),
                 },
                 GenesisAccount {
                     address: "edu1qMiner000000000000000000000".to_string(),
-                    balance: 50000000000000, // 500,000 EDU - Mining rewards pool
+                    balance: 250000000000000, // 2,500,000 EDU - Mining rewards pool
                     description: "Mining Rewards Pool".to_string(),
                 },
                 GenesisAccount {
                     address: "edu1qTreasury00000000000000000000".to_string(),
-                    balance: 30000000000000, // 300,000 EDU - Platform treasury
+                    balance: 150000000000000, // 1,500,000 EDU - Platform treasury
                     description: "Platform Treasury".to_string(),
                 },
                 GenesisAccount {
                     address: "edu1qLoanPool00000000000000000000".to_string(),
-                    balance: 60000000000000, // 600,000 EDU - Student loan pool
+                    balance: 300000000000000, // 3,000,000 EDU - Student loan pool
                     description: "Student Loan Pool".to_string(),
                 },
                 GenesisAccount {
                     address: "edu1qInvestment000000000000000000".to_string(),
-                    balance: 40000000000000, // 400,000 EDU - Education investment fund
+                    balance: 200000000000000, // 2,000,000 EDU - Education investment fund
                     description: "Education Investment Fund".to_string(),
                 },
                 GenesisAccount {
                     address: "edu1qFoundation000000000000000000".to_string(),
-                    balance: 10000000000000, // 100,000 EDU - Foundation reserves
+                    balance: 50000000000000, // 500,000 EDU - Foundation reserves
                     description: "EduNet Foundation Reserves".to_string(),
                 },
             ],
