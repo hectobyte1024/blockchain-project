@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="/static/js/shared.js"></script>
+    <script src="/static/js/loan.js" defer></script>
 </head>
 <body>
     <div class="app-container">
@@ -80,7 +81,7 @@
                     <p>Access funding based on your academic achievements and future potential</p>
                 </div>
                 <div class="header-right">
-                    <button class="btn-primary">
+                    <button class="btn-primary" onclick="document.getElementById('loan-application-section').scrollIntoView({ behavior: 'smooth' })">
                         <i class="fas fa-plus"></i>
                         Apply for Loan
                     </button>
@@ -91,38 +92,62 @@
                 </div>
             </header>
 
+            <!-- Available Loans -->
+            <div class="available-loans-section">
+                <div class="section-header">
+                    <h2>Available Loans</h2>
+                    <div class="loan-filters">
+                        <button class="filter-btn active" onclick="loanManager.loadAllLoans('all').then(() => loanManager.renderLoans('loans-list', 'all')); this.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); this.classList.add('active');">
+                            All
+                        </button>
+                        <button class="filter-btn" onclick="loanManager.loadAllLoans('pending').then(() => loanManager.renderLoans('loans-list', 'pending')); this.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); this.classList.add('active');">
+                            Pending
+                        </button>
+                        <button class="filter-btn" onclick="loanManager.loadAllLoans('funded').then(() => loanManager.renderLoans('loans-list', 'funded')); this.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); this.classList.add('active');">
+                            Funded
+                        </button>
+                    </div>
+                </div>
+                <div id="loans-list" class="loans-container">
+                    <div class="loading-state">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p>Loading loans...</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Loan Application Content -->
-            <div class="loans-container">
+            <div id="loan-application-section" class="loans-container">
                 <div class="loan-application">
                     <h2>Apply for Academic Loan</h2>
                     <p>Get funding based on your academic potential and future earning capacity.</p>
                     
-                    <div class="application-form">
+                    <form id="loan-application-form" class="application-form">
                         <div class="form-section">
                             <h3>Personal Information</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Full Name</label>
-                                    <input type="text" placeholder="Enter your full name">
+                                    <label for="loan-full-name">Full Name *</label>
+                                    <input type="text" id="loan-full-name" required placeholder="Enter your full name">
                                 </div>
                                 <div class="form-group">
-                                    <label>University</label>
-                                    <input type="text" placeholder="Your university">
+                                    <label for="loan-university">University *</label>
+                                    <input type="text" id="loan-university" required placeholder="Your university">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Major/Field of Study</label>
-                                    <input type="text" placeholder="Computer Science, Engineering, etc.">
+                                    <label for="loan-field">Major/Field of Study *</label>
+                                    <input type="text" id="loan-field" required placeholder="Computer Science, Engineering, etc.">
                                 </div>
                                 <div class="form-group">
-                                    <label>Year of Study</label>
-                                    <select>
-                                        <option>Freshman</option>
-                                        <option>Sophomore</option>
-                                        <option>Junior</option>
-                                        <option>Senior</option>
-                                        <option>Graduate</option>
+                                    <label for="loan-year">Year of Study *</label>
+                                    <select id="loan-year" required>
+                                        <option value="Freshman">Freshman</option>
+                                        <option value="Sophomore">Sophomore</option>
+                                        <option value="Junior">Junior</option>
+                                        <option value="Senior">Senior</option>
+                                        <option value="Graduate">Graduate</option>
                                     </select>
                                 </div>
                             </div>
@@ -132,17 +157,17 @@
                             <h3>Academic Performance</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Current GPA</label>
-                                    <input type="number" step="0.01" min="0" max="4.0" placeholder="3.75">
+                                    <label for="loan-gpa">Current GPA *</label>
+                                    <input type="number" id="loan-gpa" required step="0.01" min="0" max="4.0" placeholder="3.75">
                                 </div>
                                 <div class="form-group">
-                                    <label>SAT/ACT Score</label>
-                                    <input type="number" placeholder="1450">
+                                    <label for="loan-test-score">SAT/ACT Score *</label>
+                                    <input type="number" id="loan-test-score" required placeholder="1450">
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label>Academic Achievements</label>
-                                <textarea rows="3" placeholder="List your academic achievements, awards, honors, etc."></textarea>
+                                <label for="loan-achievements">Academic Achievements</label>
+                                <textarea id="loan-achievements" rows="3" placeholder="List your academic achievements, awards, honors, etc."></textarea>
                             </div>
                         </div>
 
@@ -150,24 +175,24 @@
                             <h3>Loan Details</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Loan Amount (EDU)</label>
-                                    <input type="number" min="100" max="10000" placeholder="2500">
+                                    <label for="loan-amount">Loan Amount (EDU) *</label>
+                                    <input type="number" id="loan-amount" required min="1" max="10000" placeholder="2500">
                                 </div>
                                 <div class="form-group">
-                                    <label>Loan Purpose</label>
-                                    <select>
-                                        <option>Tuition Fees</option>
-                                        <option>Research Project</option>
-                                        <option>Equipment Purchase</option>
-                                        <option>Study Materials</option>
-                                        <option>Living Expenses</option>
-                                        <option>Other</option>
+                                    <label for="loan-purpose-select">Loan Purpose *</label>
+                                    <select id="loan-purpose-select" required>
+                                        <option value="Tuition Fees">Tuition Fees</option>
+                                        <option value="Research Project">Research Project</option>
+                                        <option value="Equipment Purchase">Equipment Purchase</option>
+                                        <option value="Study Materials">Study Materials</option>
+                                        <option value="Living Expenses">Living Expenses</option>
+                                        <option value="Other">Other</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label>Detailed Purpose</label>
-                                <textarea rows="4" placeholder="Explain how you plan to use the loan funds..."></textarea>
+                                <label for="loan-purpose-detail">Detailed Purpose *</label>
+                                <textarea id="loan-purpose-detail" required rows="4" placeholder="Explain how you plan to use the loan funds..."></textarea>
                             </div>
                         </div>
 
@@ -175,22 +200,22 @@
                             <h3>Future Earning Potential</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Expected Graduation Year</label>
-                                    <input type="number" min="2024" max="2030" placeholder="2025">
+                                    <label for="loan-grad-year">Expected Graduation Year *</label>
+                                    <input type="number" id="loan-grad-year" required min="2024" max="2030" placeholder="2025">
                                 </div>
                                 <div class="form-group">
-                                    <label>Career Field</label>
-                                    <input type="text" placeholder="Software Engineering, Medicine, etc.">
+                                    <label for="loan-career">Career Field *</label>
+                                    <input type="text" id="loan-career" required placeholder="Software Engineering, Medicine, etc.">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Expected Starting Salary</label>
-                                    <input type="number" placeholder="75000">
+                                    <label for="loan-salary">Expected Starting Salary ($) *</label>
+                                    <input type="number" id="loan-salary" required placeholder="75000">
                                 </div>
                                 <div class="form-group">
-                                    <label>Preferred Repayment Term</label>
-                                    <select>
+                                    <label for="loan-term">Preferred Repayment Term *</label>
+                                    <select id="loan-term" required>
                                         <option>12 months</option>
                                         <option>24 months</option>
                                         <option>36 months</option>
@@ -202,10 +227,10 @@
                         </div>
 
                         <div class="form-actions">
-                            <button type="button" class="btn-secondary">Save Draft</button>
+                            <button type="button" class="btn-secondary" onclick="this.closest('form').reset()">Clear Form</button>
                             <button type="submit" class="btn-primary large-btn">Submit Application</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
 
                 <div class="loan-info-panel">
@@ -306,13 +331,48 @@
     </div>
 
     <script>
-        // Initialize global EdunetApp
+        // Initialize and render loans after manager loads
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof EdunetApp !== 'undefined') {
                 window.edunetApp = new EdunetApp();
                 console.log('EdunetApp initialized successfully');
             } else {
                 console.error('EdunetApp class not found - shared.js may not have loaded');
+            }
+
+            // Wait for Loan manager to be ready
+            const checkLoanManager = setInterval(() => {
+                if (window.loanManager) {
+                    clearInterval(checkLoanManager);
+                    // Render loans after a short delay to ensure data is loaded
+                    setTimeout(() => {
+                        loanManager.renderLoans('loans-list', 'all');
+                    }, 1000);
+                }
+            }, 100);
+
+            // Dynamic score calculator
+            const gpaInput = document.getElementById('loan-gpa');
+            const testScoreInput = document.getElementById('loan-test-score');
+            
+            if (gpaInput && testScoreInput) {
+                const updateScore = () => {
+                    const gpa = parseFloat(gpaInput.value) || 0;
+                    const testScore = parseInt(testScoreInput.value) || 0;
+                    
+                    if (gpa > 0 && testScore > 0 && window.loanManager) {
+                        const score = loanManager.calculateScore(gpa, testScore);
+                        
+                        // Update displayed score if element exists
+                        const scoreElement = document.querySelector('.score-value');
+                        if (scoreElement) {
+                            scoreElement.innerHTML = `${score.toFixed(1)}<span>/10</span>`;
+                        }
+                    }
+                };
+                
+                gpaInput.addEventListener('input', updateScore);
+                testScoreInput.addEventListener('input', updateScore);
             }
         });
     </script>

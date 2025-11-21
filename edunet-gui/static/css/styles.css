@@ -1712,3 +1712,545 @@ body {
         font-size: 1rem;
     }
 }
+/* =========================
+   NFT Gallery Styles
+   ========================= */
+.nft-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-tab {
+    padding: 0.75rem 1.5rem;
+    border: 2px solid var(--gray-300);
+    background: white;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-tab:hover {
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.filter-tab.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+}
+
+.filter-search {
+    position: relative;
+    min-width: 300px;
+}
+
+.filter-search i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+}
+
+.filter-search input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 2px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+}
+
+.nft-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.nft-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nft-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.nft-image {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    overflow: hidden;
+}
+
+.nft-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.nft-owned-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(16, 185, 129, 0.95);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nft-content {
+    padding: 1.5rem;
+}
+
+.nft-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.nft-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.nft-id {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    font-family: monospace;
+}
+
+.nft-description {
+    color: var(--gray-600);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.nft-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+.nft-creator,
+.nft-owner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.nft-creator i,
+.nft-owner i {
+    color: var(--gray-400);
+}
+
+.nft-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.nft-actions .btn-sm {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--gray-600);
+}
+
+.empty-state i {
+    color: var(--gray-400);
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    color: var(--gray-700);
+    margin: 1rem 0 0.5rem 0;
+}
+
+.empty-state p {
+    margin-bottom: 1.5rem;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--gray-600);
+}
+
+.loading-state i {
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+}
+
+/* =========================
+   Loan System Styles
+   ========================= */
+.available-loans-section {
+    margin-bottom: 3rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.75rem;
+    color: var(--gray-900);
+}
+
+.loan-filters {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--gray-300);
+    background: white;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.filter-btn:hover {
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+}
+
+.loans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.loan-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.loan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.loan-card.my-loan {
+    border: 2px solid var(--primary-blue);
+}
+
+.loan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.loan-borrower {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.borrower-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.borrower-info h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    color: var(--gray-900);
+}
+
+.borrower-info p {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.loan-status {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-pending {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.status-funded {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.status-active {
+    background: #DBEAFE;
+    color: #1E40AF;
+}
+
+.status-repaid {
+    background: #E0E7FF;
+    color: #3730A3;
+}
+
+.status-defaulted {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.loan-score {
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--radius-md);
+    color: white;
+    margin-bottom: 1.5rem;
+}
+
+.score-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+}
+
+.score-value {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.score-value span {
+    font-size: 1.5rem;
+    opacity: 0.8;
+}
+
+.score-breakdown {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255,255,255,0.3);
+}
+
+.score-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+}
+
+.loan-amount {
+    margin-bottom: 1.5rem;
+}
+
+.amount-requested {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.amount-requested label {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.amount-requested .amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.amount-progress {
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background: var(--gray-200);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.5s ease;
+}
+
+.progress-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.loan-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--gray-700);
+}
+
+.detail-item i {
+    color: var(--gray-400);
+    width: 16px;
+}
+
+.loan-purpose {
+    padding: 1rem;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.loan-purpose strong {
+    color: var(--gray-900);
+}
+
+.loan-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.my-loan-badge {
+    flex: 1;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.info-box {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: var(--radius-md);
+    margin: 1rem 0;
+}
+
+.info-box i {
+    color: #2563EB;
+    font-size: 1.25rem;
+}
+
+.info-box strong {
+    color: var(--gray-900);
+}
+
+/* Modal enhancements */
+.large-modal {
+    max-width: 700px;
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-form .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .nft-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .loans-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-search {
+        min-width: 100%;
+    }
+    
+    .loan-details {
+        grid-template-columns: 1fr;
+    }
+}

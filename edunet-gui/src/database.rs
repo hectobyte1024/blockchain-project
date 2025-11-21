@@ -1,20 +1,20 @@
 use sqlx::{SqlitePool, sqlite::SqlitePoolOptions, Row};
 use serde::{Serialize, Deserialize};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, NaiveDateTime};
 use std::sync::Arc;
 use anyhow::Result;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbUser {
-    pub id: i64,
+    pub id: Option<i64>,
     pub username: String,
     pub password_hash: String,
     pub wallet_address: String,
     pub private_key: String,
-    pub created_at: DateTime<Utc>,
-    pub last_login: Option<DateTime<Utc>>,
+    pub created_at: Option<NaiveDateTime>,
+    pub last_login: Option<NaiveDateTime>,
     pub email: Option<String>,
-    pub is_active: bool,
+    pub is_active: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -57,18 +57,18 @@ pub struct DbLoanApplication {
     pub university: String,
     pub field_of_study: String,
     pub gpa: Option<f64>,
-    pub test_score: Option<i32>,
+    pub test_score: Option<i64>,
     pub achievements: Option<String>,
     pub requested_amount: i64,
     pub interest_rate: Option<f64>,
-    pub repayment_term_months: Option<i32>,
+    pub repayment_term_months: Option<i64>,
     pub loan_purpose: Option<String>,
-    pub graduation_year: Option<i32>,
+    pub graduation_year: Option<i64>,
     pub expected_career: Option<String>,
     pub expected_salary: Option<i64>,
     pub proof_of_potential_score: Option<f64>,
     pub status: String,
-    pub funded_amount: i64,
+    pub funded_amount: Option<i64>,
     pub funding_tx_hash: Option<String>,
 }
 
@@ -400,7 +400,7 @@ impl Database {
             .await?;
 
         // Update loan funded amount
-        sqlx::query("UPDATE loan_applications SET funded_amount = funded_amount + ?, updated_at = CURRENT_TIMESTAMP WHERE loan_id = ?")
+        sqlx::query("UPDATE loan_applications SET funded_amount = COALESCE(funded_amount, 0) + ?, updated_at = CURRENT_TIMESTAMP WHERE loan_id = ?")
             .bind(amount)
             .bind(loan_id)
             .execute(&self.pool)
@@ -409,7 +409,8 @@ impl Database {
         // Check if fully funded and update status
         let loan = self.get_loan_by_id(loan_id).await?;
         if let Some(loan) = loan {
-            if loan.funded_amount >= loan.requested_amount {
+            let funded = loan.funded_amount.unwrap_or(0);
+            if funded >= loan.requested_amount {
                 sqlx::query("UPDATE loan_applications SET status = 'funded', funding_tx_hash = ?, funded_at = CURRENT_TIMESTAMP WHERE loan_id = ?")
                     .bind(tx_hash)
                     .bind(loan_id)
