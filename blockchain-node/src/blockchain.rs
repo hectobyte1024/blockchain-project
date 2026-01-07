@@ -100,8 +100,13 @@ impl BlockchainBackend {
         let sync_config = SyncConfig::default();
         let sync_engine = Arc::new(SyncEngine::new(sync_config, consensus.clone()));
         
-        // Initialize contract executor
-        let contract_executor = Arc::new(ContractExecutor::new());
+        // Initialize contract executor with persistence
+        let contract_executor = Arc::new(ContractExecutor::with_path("blockchain-data/contracts"));
+        
+        // Load existing contracts from disk
+        if let Err(e) = contract_executor.load_contracts().await {
+            warn!("Failed to load contracts from disk: {}", e);
+        }
         
         info!("✅ Blockchain backend initialized");
         info!("🔐 Features: HMAC-SHA256 signatures, UTXO validation, PoW consensus, SQLite persistence, Smart Contracts (EVM)");

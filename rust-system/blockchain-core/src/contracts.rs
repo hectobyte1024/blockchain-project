@@ -10,7 +10,9 @@ use revm::{
 use serde::{Deserialize, Serialize, Serializer, Deserializer};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::path::{Path, PathBuf};
 use tokio::sync::RwLock;
+use tokio::fs;
 
 /// Hex serialization helper
 mod hex_serde {
@@ -110,9 +112,8 @@ pub struct ContractAccount {
     pub address: EthAddress,
     /// Contract bytecode
     pub code: Vec<u8>,
-    /// Contract storage (stored as hex strings for serialization)
-    #[serde(skip)]
-    pub storage: HashMap<U256, U256>,
+    /// Contract storage (key-value pairs, serialized as strings)
+    pub storage: HashMap<String, String>, // Store as hex strings for serialization
     /// Account balance (in wei/satoshis)
     pub balance: u64,
     /// Account nonce (for contract creation)
@@ -154,15 +155,88 @@ pub struct ContractExecutor {
     contracts: Arc<RwLock<HashMap<EthAddress, ContractAccount>>>,
     /// Account balances (EDU address -> balance)
     balances: Arc<RwLock<HashMap<String, u64>>>,
+    /// Storage path for contract persistence
+    storage_path: PathBuf,
 }
 
 impl ContractExecutor {
     /// Create new contract executor
     pub fn new() -> Self {
+        Self::with_path("contract-data")
+    }
+    
+    /// Create new contract executor with custom storage path
+    pub fn with_path<P: AsRef<Path>>(path: P) -> Self {
         Self {
             contracts: Arc::new(RwLock::new(HashMap::new())),
             balances: Arc::new(RwLock::new(HashMap::new())),
+            storage_path: path.as_ref().to_path_buf(),
         }
+    }
+    
+    /// Load all contracts from disk
+    pub async fn load_contracts(&self) -> Result<()> {
+        // Create storage directory if it doesn't exist
+        if !self.storage_path.exists() {
+            fs::create_dir_all(&self.storage_path).await
+                .map_err(|e| BlockchainError::StorageError(e.to_string()))?;
+            return Ok(());
+        }
+        
+        // Read all contract files
+        let mut entries = fs::read_dir(&self.storage_path).await
+            .map_err(|e| BlockchainError::StorageError(e.to_string()))?;
+        
+        let mut loaded_count = 0;
+        while let Some(entry) = entries.next_entry().await
+            .map_err(|e| BlockchainError::StorageError(e.to_string()))? {
+            let path = entry.path();
+            
+            // Only load .json files
+            if path.extension().and_then(|s| s.to_str()) == Some("json") {
+                if let Ok(contract) = self.load_contract_from_file(&path).await {
+                    self.contracts.write().await.insert(contract.address, contract);
+                    loaded_count += 1;
+                }
+            }
+        }
+        
+        println!("Loaded {} contracts from disk", loaded_count);
+        Ok(())
+    }
+    
+    /// Load a single contract from file
+    async fn load_contract_from_file(&self, path: &Path) -> Result<ContractAccount> {
+        let data = fs::read_to_string(path).await
+            .map_err(|e| BlockchainError::StorageError(e.to_string()))?;
+        
+        let contract: ContractAccount = serde_json::from_str(&data)
+            .map_err(|e| BlockchainError::StorageError(e.to_string()))?;
+        
+        Ok(contract)
+    }
+    
+    /// Save a contract to disk
+    async fn save_contract(&self, contract: &ContractAccount) -> Result<()> {
+        // Create storage directory if it doesn't exist
+        if !self.storage_path.exists() {
+            fs::create_dir_all(&self.storage_path).await
+                .map_err(|e| BlockchainError::StorageError(e.to_string()))?;
+        }
+        
+        // Generate filename from contract address
+        let filename = format!("contract_{}.json", hex::encode(contract.address.as_bytes()));
+        let path = self.storage_path.join(filename);
+        
+        // Serialize contract to JSON
+        let data = serde_json::to_string_pretty(&contract)
+            .map_err(|e| BlockchainError::StorageError(e.to_string()))?;
+        
+        // Write to file
+        fs::write(&path, data).await
+            .map_err(|e| BlockchainError::StorageError(e.to_string()))?;
+        
+        Ok(())
     }
 
     /// Deploy a new contract
@@ -233,7 +307,13 @@ impl ContractExecutor {
                         deployed_at: 0, // Will be set by caller
                     };
                     
-                    self.contracts.write().await.insert(EthAddress::from_address(addr), contract);
+                    // Save to memory
+                    self.contracts.write().await.insert(EthAddress::from_address(addr), contract.clone());
+                    
+                    // Persist to disk
+                    if let Err(e) = self.save_contract(&contract).await {
+                        eprintln!("Warning: Failed to persist contract to disk: {}", e);
+                    }
                 }
                 
                 ExecutionResult {

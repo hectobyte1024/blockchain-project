@@ -144,6 +144,9 @@ pub enum BlockchainError {
     
     #[error("Contract not found: {0}")]
     ContractNotFound(String),
+    
+    #[error("Storage error: {0}")]
+    StorageError(String),
 }
 
 impl From<std::string::FromUtf8Error> for BlockchainError {
