@@ -265,6 +265,19 @@ impl ContractExecutor {
         };
         db.insert_account_info(deployer_addr, deployer_info);
         
+        // Load ALL existing contracts into EVM database (for constructor calls)
+        let contracts = self.contracts.read().await;
+        for (addr, contract_data) in contracts.iter() {
+            let contract_info = revm::primitives::AccountInfo {
+                balance: U256::from(contract_data.balance),
+                nonce: contract_data.nonce,
+                code_hash: revm::primitives::KECCAK_EMPTY,
+                code: Some(Bytecode::new_raw(Bytes::from(contract_data.code.clone()))),
+            };
+            db.insert_account_info(addr.to_address(), contract_info);
+        }
+        drop(contracts); // Release read lock before writing
+        
         // Configure transaction
         let mut evm = Evm::builder()
             .with_db(db)
@@ -386,14 +399,16 @@ impl ContractExecutor {
         };
         db.insert_account_info(caller_addr, caller_info);
         
-        // Set contract account
-        let contract_info = revm::primitives::AccountInfo {
-            balance: U256::from(contract.balance),
-            nonce: contract.nonce,
-            code_hash: revm::primitives::KECCAK_EMPTY, // Will be set by code
-            code: Some(Bytecode::new_raw(Bytes::from(contract.code.clone()))),
-        };
-        db.insert_account_info(eth_contract_addr, contract_info);
+        // Load ALL contracts into EVM database for contract-to-contract calls
+        for (addr, contract_data) in contracts.iter() {
+            let contract_info = revm::primitives::AccountInfo {
+                balance: U256::from(contract_data.balance),
+                nonce: contract_data.nonce,
+                code_hash: revm::primitives::KECCAK_EMPTY,
+                code: Some(Bytecode::new_raw(Bytes::from(contract_data.code.clone()))),
+            };
+            db.insert_account_info(addr.to_address(), contract_info);
+        }
         
         // Configure transaction
         let mut evm = Evm::builder()
