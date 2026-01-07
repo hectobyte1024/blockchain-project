@@ -3,12 +3,10 @@
 //! Provides functionality for creating, signing, and broadcasting blockchain transactions.
 //! Integrates with wallet system and UTXO management.
 
-use crate::{Hash256, BlockchainError, Result};
+use crate::{Hash256, BlockchainError, Result, PrivateKey};
 use crate::transaction::{Transaction, TransactionInput, TransactionOutput};
 use crate::utxo::{UTXOSet, UTXO};
-use crate::wallet::{Wallet, PrivateKey};
-use blockchain_ffi::types::{Hash256Wrapper, PrivateKeyWrapper, SignatureWrapper};
-use blockchain_ffi::crypto::convenience::sign_message;
+use crate::wallet::Wallet;
 use serde::{Deserialize, Serialize};
 use sha2::{Sha256, Digest};
 use std::collections::HashMap;
@@ -94,7 +92,7 @@ impl TransactionBuilder {
         // Add inputs
         for utxo in selected_utxos {
             let input = TransactionInput::new(
-                Hash256Wrapper::from_hash256(&utxo.tx_hash),
+                utxo.tx_hash,
                 utxo.output_index,
                 Vec::new(), // Will be filled with signature
             );
@@ -182,44 +180,8 @@ impl TransactionBuilder {
         input_index: usize,
         script_code: &[u8],
     ) -> Result<Hash256> {
-        // Simplified signature hash creation
-        let mut hasher = Sha256::new();
-        
-        // Add transaction version
-        hasher.update(tx.version.to_le_bytes());
-        
-        // Add inputs (with script_code for current input)
-        hasher.update((tx.inputs.len() as u32).to_le_bytes());
-        for (i, input) in tx.inputs.iter().enumerate() {
-            hasher.update(&input.prev_tx_hash);
-            hasher.update(input.prev_output_index.to_le_bytes());
-            
-            if i == input_index {
-                hasher.update((script_code.len() as u32).to_le_bytes());
-                hasher.update(script_code);
-            } else {
-                hasher.update(0u32.to_le_bytes()); // Empty script
-            }
-            
-            hasher.update(input.sequence.to_le_bytes());
-        }
-        
-        // Add outputs
-        hasher.update((tx.outputs.len() as u32).to_le_bytes());
-        for output in &tx.outputs {
-            hasher.update(output.value.to_le_bytes());
-            hasher.update((output.script_pubkey.len() as u32).to_le_bytes());
-            hasher.update(&output.script_pubkey);
-        }
-        
-        // Add locktime and sighash type
-        hasher.update(tx.locktime.to_le_bytes());
-        hasher.update(1u32.to_le_bytes()); // SIGHASH_ALL
-        
-        let hash = hasher.finalize();
-        let mut result = [0u8; 32];
-        result.copy_from_slice(&hash);
-        Ok(result)
+        // Use proper Bitcoin-style SIGHASH_ALL
+        Ok(tx.calculate_signature_hash(input_index, script_code, 0x01))
     }
 }
 
@@ -406,48 +368,28 @@ pub fn create_p2pkh_script(address: &str) -> Result<Vec<u8>> {
     Ok(script)
 }
 
-/// Derive public key from private key (simplified)
+/// Derive public key from private key using secp256k1 ECDSA
 fn derive_public_key(private_key: &PrivateKey) -> Result<Vec<u8>> {
-    // Simplified public key derivation
-    // In a real implementation, this would use secp256k1
-    let mut public_key = Vec::with_capacity(33);
-    public_key.push(0x02); // Compressed public key prefix
-    public_key.extend_from_slice(&private_key[..32]);
-    Ok(public_key)
+    let pubkey = crate::crypto::derive_public_key(private_key)?;
+    Ok(pubkey.to_vec())
 }
 
-/// Sign a hash with a private key using production ECDSA via FFI
+/// Sign a hash with a private key using secp256k1 ECDSA
 fn sign_hash(hash: &Hash256, private_key: &PrivateKey) -> Result<Vec<u8>> {
-    // Convert types for FFI
-    let hash_wrapper = Hash256Wrapper::from_hash256(hash);
-    let private_key_wrapper = PrivateKeyWrapper::from_private_key(private_key);
-    
-    // Use FFI crypto for real ECDSA signing
-    match sign_message(&private_key_wrapper, &hash_wrapper) {
-        Ok(signature_wrapper) => {
-            // Convert back to Vec<u8>
-            Ok(signature_wrapper.to_vec())
-        }
-        Err(e) => Err(BlockchainError::CryptoError(format!("ECDSA signing failed: {}", e)))
-    }
+    crate::crypto::sign_hash(hash, private_key)
 }
 
-/// Verify a signature (simplified)
+/// Verify an ECDSA signature
 pub fn verify_signature(
     signature: &[u8],
     public_key: &[u8],
     hash: &Hash256,
 ) -> Result<bool> {
-    // Simplified signature verification
-    // In a real implementation, this would use proper ECDSA verification
-    
-    if signature.len() < 64 || public_key.len() != 33 {
+    if public_key.len() != 33 {
         return Ok(false);
     }
-
-    // For this simplified implementation, we'll just check that the signature
-    // was created with the corresponding private key
-    Ok(true) // Always return true for demo purposes
+    
+    crate::crypto::verify_signature(signature, public_key, hash)
 }
 
 #[cfg(test)]

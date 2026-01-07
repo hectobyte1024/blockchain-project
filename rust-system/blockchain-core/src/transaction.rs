@@ -1,25 +1,22 @@
 use crate::{
-    BlockchainError, Result, Hash256, Amount, OutPoint,
+    BlockchainError, Result, Hash256, Hash256Ext, Amount, OutPoint,
+    PrivateKey, PublicKey, Signature,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use sha2::{Digest, Sha256};
 
-// Import FFI types and crypto functionality for proper transaction signing
-use blockchain_ffi::types::{Hash256Wrapper, PrivateKeyWrapper, PublicKeyWrapper, SignatureWrapper};
-use blockchain_ffi::crypto::convenience;
-
-/// Transaction input wrapper
+/// Transaction input
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactionInput {
-    pub prev_tx_hash: Hash256Wrapper,
+    pub prev_tx_hash: Hash256,
     pub prev_output_index: u32,
     pub script_sig: Vec<u8>,
     pub sequence: u32,
 }
 
 impl TransactionInput {
-    pub fn new(prev_tx_hash: Hash256Wrapper, prev_output_index: u32, script_sig: Vec<u8>) -> Self {
+    pub fn new(prev_tx_hash: Hash256, prev_output_index: u32, script_sig: Vec<u8>) -> Self {
         Self {
             prev_tx_hash,
             prev_output_index,
@@ -29,12 +26,12 @@ impl TransactionInput {
     }
     
     pub fn is_coinbase(&self) -> bool {
-        self.prev_tx_hash.is_zero() && self.prev_output_index == 0xFFFFFFFF
+        self.prev_tx_hash == [0u8; 32] && self.prev_output_index == 0xFFFFFFFF
     }
     
     pub fn create_coinbase(coinbase_data: Vec<u8>) -> Self {
         Self {
-            prev_tx_hash: Hash256Wrapper::zero(),
+            prev_tx_hash: [0u8; 32],
             prev_output_index: 0xFFFFFFFF,
             script_sig: coinbase_data,
             sequence: 0xFFFFFFFF,
@@ -63,12 +60,16 @@ impl TransactionOutput {
     }
     
     pub fn create_p2pkh(value: u64, address: &str) -> Result<Self> {
-        // Simplified P2PKH creation - in real implementation would decode address
-        let script = vec![
-            0x76, 0xa9, 0x14, // OP_DUP OP_HASH160 Push20
-            // Would insert 20-byte hash160 here
-            0x88, 0xac, // OP_EQUALVERIFY OP_CHECKSIG
+        // Encode address directly into script for simplicity
+        // In production, would use proper base58/bech32 decoding
+        let address_bytes = address.as_bytes();
+        
+        let mut script = vec![
+            0x76, 0xa9, // OP_DUP OP_HASH160
+            address_bytes.len() as u8, // Push address length
         ];
+        script.extend_from_slice(address_bytes);
+        script.extend_from_slice(&[0x88, 0xac]); // OP_EQUALVERIFY OP_CHECKSIG
         
         Ok(Self {
             value,
@@ -77,17 +78,18 @@ impl TransactionOutput {
     }
     
     pub fn get_address(&self) -> Option<String> {
-        // Simplified address extraction
-        if self.script_pubkey.len() == 25 &&
+        // Extract address from script
+        if self.script_pubkey.len() > 5 &&
            self.script_pubkey[0] == 0x76 && // OP_DUP
-           self.script_pubkey[1] == 0xa9 && // OP_HASH160
-           self.script_pubkey[2] == 0x14    // Push 20 bytes
+           self.script_pubkey[1] == 0xa9    // OP_HASH160
         {
-            // Would extract and encode address here
-            Some("P2PKH_ADDRESS".to_string())
-        } else {
-            None
+            let addr_len = self.script_pubkey[2] as usize;
+            if self.script_pubkey.len() >= 3 + addr_len + 2 {
+                let address_bytes = &self.script_pubkey[3..3+addr_len];
+                return String::from_utf8(address_bytes.to_vec()).ok();
+            }
         }
+        None
     }
 }
 
@@ -129,10 +131,26 @@ pub struct Transaction {
     pub witnesses: Vec<TransactionWitness>,
     pub locktime: u32,
     
+    /// Contract deployment bytecode (if this is a contract deployment)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub contract_code: Option<Vec<u8>>,
+    
+    /// Contract call data (if this is a contract call)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub contract_data: Option<Vec<u8>>,
+    
+    /// Target contract address for calls (20 bytes Ethereum-style)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub contract_address: Option<[u8; 20]>,
+    
+    /// Gas limit for contract execution
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gas_limit: Option<u64>,
+    
     #[serde(skip)]
-    cached_hash: Option<Hash256Wrapper>,
+    cached_hash: Option<Hash256>,
     #[serde(skip)]
-    cached_wtxid: Option<Hash256Wrapper>,
+    cached_wtxid: Option<Hash256>,
 }
 
 impl Transaction {
@@ -144,6 +162,59 @@ impl Transaction {
             outputs,
             witnesses: vec![TransactionWitness::new(); witness_count],
             locktime: 0,
+            contract_code: None,
+            contract_data: None,
+            contract_address: None,
+            gas_limit: None,
+            cached_hash: None,
+            cached_wtxid: None,
+        }
+    }
+    
+    /// Create a contract deployment transaction
+    pub fn new_contract_deployment(
+        version: u32,
+        inputs: Vec<TransactionInput>,
+        outputs: Vec<TransactionOutput>,
+        bytecode: Vec<u8>,
+        gas_limit: u64,
+    ) -> Self {
+        let witness_count = inputs.len();
+        Self {
+            version,
+            inputs,
+            outputs,
+            witnesses: vec![TransactionWitness::new(); witness_count],
+            locktime: 0,
+            contract_code: Some(bytecode),
+            contract_data: None,
+            contract_address: None,
+            gas_limit: Some(gas_limit),
+            cached_hash: None,
+            cached_wtxid: None,
+        }
+    }
+    
+    /// Create a contract call transaction
+    pub fn new_contract_call(
+        version: u32,
+        inputs: Vec<TransactionInput>,
+        outputs: Vec<TransactionOutput>,
+        contract_address: [u8; 20],
+        calldata: Vec<u8>,
+        gas_limit: u64,
+    ) -> Self {
+        let witness_count = inputs.len();
+        Self {
+            version,
+            inputs,
+            outputs,
+            witnesses: vec![TransactionWitness::new(); witness_count],
+            locktime: 0,
+            contract_code: None,
+            contract_data: Some(calldata),
+            contract_address: Some(contract_address),
+            gas_limit: Some(gas_limit),
             cached_hash: None,
             cached_wtxid: None,
         }
@@ -151,6 +222,14 @@ impl Transaction {
     
     pub fn is_coinbase(&self) -> bool {
         self.inputs.len() == 1 && self.inputs[0].is_coinbase()
+    }
+    
+    pub fn is_contract_deployment(&self) -> bool {
+        self.contract_code.is_some()
+    }
+    
+    pub fn is_contract_call(&self) -> bool {
+        self.contract_data.is_some() && self.contract_address.is_some()
     }
     
     pub fn is_segwit(&self) -> bool {
@@ -184,18 +263,94 @@ impl Transaction {
     }
     
     pub fn get_txid(&self) -> String {
-        // Would calculate actual transaction hash here
-        format!("tx_{:08x}", self.version)
+        hex::encode(self.calculate_hash())
+    }
+    
+    /// Calculate the transaction hash (deterministic)
+    pub fn calculate_hash(&self) -> Hash256 {
+        let mut data = Vec::new();
+        
+        // Version
+        data.extend_from_slice(&self.version.to_le_bytes());
+        
+        // Inputs
+        for input in &self.inputs {
+            data.extend_from_slice(&input.prev_tx_hash);
+            data.extend_from_slice(&input.prev_output_index.to_le_bytes());
+            data.extend_from_slice(&(input.script_sig.len() as u32).to_le_bytes());
+            data.extend_from_slice(&input.script_sig);
+            data.extend_from_slice(&input.sequence.to_le_bytes());
+        }
+        
+        // Outputs
+        for output in &self.outputs {
+            data.extend_from_slice(&output.value.to_le_bytes());
+            data.extend_from_slice(&(output.script_pubkey.len() as u32).to_le_bytes());
+            data.extend_from_slice(&output.script_pubkey);
+        }
+        
+        // Locktime
+        data.extend_from_slice(&self.locktime.to_le_bytes());
+        
+        let hash_bytes = Sha256::digest(&data);
+        let mut hash = [0u8; 32];
+        hash.copy_from_slice(&hash_bytes);
+        hash
+    }
+    
+    /// Calculate signature hash for signing/verifying a specific input
+    /// This is the Bitcoin-style SIGHASH algorithm
+    pub fn calculate_signature_hash(
+        &self,
+        input_index: usize,
+        script_pubkey: &[u8],
+        sighash_type: u32,
+    ) -> Hash256 {
+        let mut data = Vec::new();
+        
+        // Version
+        data.extend_from_slice(&self.version.to_le_bytes());
+        
+        // Inputs - clear all script_sigs except the one being signed
+        for (i, input) in self.inputs.iter().enumerate() {
+            data.extend_from_slice(&input.prev_tx_hash);
+            data.extend_from_slice(&input.prev_output_index.to_le_bytes());
+            
+            if i == input_index {
+                // For the input being signed, use the script_pubkey from the UTXO
+                data.extend_from_slice(&(script_pubkey.len() as u32).to_le_bytes());
+                data.extend_from_slice(script_pubkey);
+            } else {
+                // For other inputs, use empty script
+                data.extend_from_slice(&0u32.to_le_bytes());
+            }
+            
+            data.extend_from_slice(&input.sequence.to_le_bytes());
+        }
+        
+        // Outputs (SIGHASH_ALL includes all outputs)
+        for output in &self.outputs {
+            data.extend_from_slice(&output.value.to_le_bytes());
+            data.extend_from_slice(&(output.script_pubkey.len() as u32).to_le_bytes());
+            data.extend_from_slice(&output.script_pubkey);
+        }
+        
+        // Locktime
+        data.extend_from_slice(&self.locktime.to_le_bytes());
+        
+        // SIGHASH type
+        data.extend_from_slice(&sighash_type.to_le_bytes());
+        
+        // Double SHA256
+        let hash1 = Sha256::digest(&data);
+        let hash2 = Sha256::digest(&hash1);
+        let mut hash = [0u8; 32];
+        hash.copy_from_slice(&hash2);
+        hash
     }
     
     pub fn get_hash(&self) -> Result<Hash256> {
-        // For now, return a simple hash based on transaction data
-        // In a real implementation, this would be a proper SHA256 hash
-        let data = format!("{:?}", self);
-        let hash_bytes = Sha256::digest(data.as_bytes());
-        let mut hash = [0u8; 32];
-        hash.copy_from_slice(&hash_bytes);
-        Ok(hash)
+        Ok(self.calculate_hash())
     }
     
     pub fn clear_cache(&mut self) {
@@ -237,7 +392,7 @@ impl Transaction {
 /// UTXO (Unspent Transaction Output)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UTXO {
-    pub tx_hash: Hash256Wrapper,
+    pub tx_hash: Hash256,
     pub output_index: u32,
     pub output: TransactionOutput,
     pub block_height: u32,
@@ -245,7 +400,7 @@ pub struct UTXO {
 }
 
 impl UTXO {
-    pub fn new(tx_hash: Hash256Wrapper, output_index: u32, output: TransactionOutput, block_height: u32, is_coinbase: bool) -> Self {
+    pub fn new(tx_hash: Hash256, output_index: u32, output: TransactionOutput, block_height: u32, is_coinbase: bool) -> Self {
         Self {
             tx_hash,
             output_index,
@@ -286,17 +441,17 @@ impl UTXOSet {
         self.utxos.insert(outpoint, utxo);
     }
     
-    pub fn remove_utxo(&mut self, tx_hash: &Hash256Wrapper, output_index: u32) -> bool {
+    pub fn remove_utxo(&mut self, tx_hash: &Hash256, output_index: u32) -> bool {
         let outpoint = format!("{}:{}", tx_hash.to_hex(), output_index);
         self.utxos.remove(&outpoint).is_some()
     }
     
-    pub fn get_utxo(&self, tx_hash: &Hash256Wrapper, output_index: u32) -> Option<&UTXO> {
+    pub fn get_utxo(&self, tx_hash: &Hash256, output_index: u32) -> Option<&UTXO> {
         let outpoint = format!("{}:{}", tx_hash.to_hex(), output_index);
         self.utxos.get(&outpoint)
     }
     
-    pub fn has_utxo(&self, tx_hash: &Hash256Wrapper, output_index: u32) -> bool {
+    pub fn has_utxo(&self, tx_hash: &Hash256, output_index: u32) -> bool {
         let outpoint = format!("{}:{}", tx_hash.to_hex(), output_index);
         self.utxos.contains_key(&outpoint)
     }
@@ -333,7 +488,7 @@ impl UTXOSet {
         let tx_hash: Hash256 = tx_hash_bytes.try_into().map_err(|_| BlockchainError::SerializationError("Invalid hash length".to_string()))?;
         for (index, output) in tx.outputs.iter().enumerate() {
             let utxo = UTXO::new(
-                Hash256Wrapper::from_hash256(&tx_hash),
+                tx_hash,
                 index as u32,
                 output.clone(),
                 block_height,
@@ -350,8 +505,7 @@ impl UTXOSet {
         let tx_hash_bytes = crate::utils::hex_to_bytes(&tx.get_txid())?;
         let tx_hash: Hash256 = tx_hash_bytes.try_into().map_err(|_| BlockchainError::SerializationError("Invalid hash length".to_string()))?;
         for index in 0..tx.outputs.len() {
-            let wrapper = Hash256Wrapper::from_hash256(&tx_hash);
-            self.remove_utxo(&wrapper, index as u32);
+            self.remove_utxo(&tx_hash, index as u32);
         }
         
         // Note: In a real implementation, we would need to restore the spent UTXOs
@@ -386,7 +540,7 @@ pub struct TransactionBuilder {
     version: u32,
     inputs: Vec<TransactionInput>,
     outputs: Vec<TransactionOutput>,
-    signing_keys: Vec<(PrivateKeyWrapper, PublicKeyWrapper)>,
+    signing_keys: Vec<(PrivateKey, PublicKey)>,
     prev_outputs: Vec<TransactionOutput>,
     total_input_value: u64,
     fee_rate: u64, // satoshis per kvB
@@ -407,7 +561,7 @@ impl TransactionBuilder {
         }
     }
     
-    pub fn add_input(mut self, prev_tx_hash: Hash256Wrapper, prev_output_index: u32, prev_output: TransactionOutput, signing_key: PrivateKeyWrapper, public_key: PublicKeyWrapper) -> Self {
+    pub fn add_input(mut self, prev_tx_hash: Hash256, prev_output_index: u32, prev_output: TransactionOutput, signing_key: PrivateKey, public_key: PublicKey) -> Self {
         let input = TransactionInput::new(prev_tx_hash, prev_output_index, Vec::new());
         self.total_input_value += prev_output.value;
         
@@ -474,9 +628,16 @@ impl TransactionBuilder {
                 // Get the private key and public key for this input
                 let (private_key, public_key) = &self.signing_keys[i];
                 
-                // Sign the transaction hash using FFI crypto functions
-                let signature = convenience::sign_message(private_key, &signature_hash)
-                    .map_err(|e| BlockchainError::InvalidTransaction(format!("Signature creation failed: {}", e)))?;
+                // Sign the transaction hash using HMAC-SHA256
+                let sig_bytes = {
+                    use hmac::{Hmac, Mac};
+                    use sha2::Sha256;
+                    type HmacSha256 = Hmac<Sha256>;
+                    let mut mac = HmacSha256::new_from_slice(private_key)
+                        .map_err(|e| BlockchainError::InvalidTransaction(format!("Invalid key: {}", e)))?;
+                    mac.update(&signature_hash);
+                    mac.finalize().into_bytes().to_vec()
+                };
                 
                 // Create script_sig with signature + sighash flag + public key (for P2PKH)
                 // Standard P2PKH script: <signature> <sighash_flag> <public_key>
@@ -484,7 +645,7 @@ impl TransactionBuilder {
                 
                 // Add signature length + signature + sighash flag
                 let sig_with_flag = {
-                    let mut sig = signature.as_bytes().to_vec();
+                    let mut sig = sig_bytes;
                     sig.push(0x01); // SIGHASH_ALL flag
                     sig
                 };
@@ -492,7 +653,7 @@ impl TransactionBuilder {
                 script_sig.extend_from_slice(&sig_with_flag);
                 
                 // Add public key length + public key
-                let pubkey_bytes = public_key.as_bytes();
+                let pubkey_bytes = public_key.as_slice();
                 script_sig.push(pubkey_bytes.len() as u8);
                 script_sig.extend_from_slice(pubkey_bytes);
                 
@@ -511,7 +672,7 @@ impl TransactionBuilder {
     }
     
     /// Create signature hash for transaction input (implements Bitcoin's SIGHASH_ALL)
-    fn create_signature_hash(&self, tx: &Transaction, input_index: usize, sighash_type: u8) -> Result<Hash256Wrapper> {
+    fn create_signature_hash(&self, tx: &Transaction, input_index: usize, sighash_type: u8) -> Result<Hash256> {
         if input_index >= tx.inputs.len() {
             return Err(BlockchainError::InvalidTransaction("Input index out of range".to_string()).into());
         }
@@ -528,7 +689,7 @@ impl TransactionBuilder {
         // Inputs - for SIGHASH_ALL, clear all script_sigs except the one being signed
         for (i, input) in tx.inputs.iter().enumerate() {
             // Previous transaction hash (32 bytes)
-            serialized.extend_from_slice(input.prev_tx_hash.as_bytes());
+            serialized.extend_from_slice(&input.prev_tx_hash);
             
             // Previous output index (4 bytes, little endian)
             serialized.extend_from_slice(&input.prev_output_index.to_le_bytes());
@@ -573,9 +734,10 @@ impl TransactionBuilder {
         // Signature hash type (4 bytes, little endian)
         serialized.extend_from_slice(&(sighash_type as u32).to_le_bytes());
         
-        // Double SHA-256 the serialized data using FFI convenience function
-        convenience::double_sha256(&serialized)
-            .map_err(|e| BlockchainError::InvalidTransaction(format!("Hash creation failed: {}", e)).into())
+        // Double SHA-256 the serialized data
+        let hash = crate::utils::double_sha256(&serialized);
+        
+        Ok(hash)
     }
 }
 
@@ -617,4 +779,4 @@ pub mod validation {
 }
 
 // TODO: Add transaction utilities and tests when types are properly imported
-// TODO: Uncomment and fix when Hash256Wrapper is properly imported
+// TODO: Uncomment and fix when Hash256 is properly imported

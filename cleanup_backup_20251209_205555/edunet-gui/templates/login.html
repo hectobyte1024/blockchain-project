@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduNet - Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+        .auth-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .logo p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 15px;
+        }
+        .btn:hover {
+            background: #5a67d8;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .auth-switch a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+        .demo-users {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .demo-users h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .demo-user {
+            background: white;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+        .demo-user:hover {
+            background: #e9ecef;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .blockchain-status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background: #e8f4f8;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="logo">
+            <h1>🎓 EduNet</h1>
+            <p>University Blockchain Platform</p>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <button type="submit" class="btn" id="login-btn">Login to Blockchain</button>
+        </form>
+
+        <div class="auth-switch">
+            <p>Don't have an account? <a href="/register">Register here</a></p>
+        </div>
+
+        <div class="demo-users">
+            <h4>🧪 Demo Users (Click to auto-fill):</h4>
+            <div class="demo-user" onclick="fillLogin('alice', 'password123')">
+                👩‍🎓 <strong>alice</strong> - Stanford University
+            </div>
+            <div class="demo-user" onclick="fillLogin('bob', 'password123')">
+                👨‍🎓 <strong>bob</strong> - MIT
+            </div>
+            <div class="demo-user" onclick="fillLogin('carol', 'password123')">
+                👩‍🎓 <strong>carol</strong> - UC Berkeley
+            </div>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                Each user has their own blockchain wallet automatically created!
+            </p>
+        </div>
+
+        <div class="blockchain-status">
+            <span class="status-indicator"></span>
+            Connected to EduNet Blockchain Network
+        </div>
+    </div>
+
+    <script>
+        // Auto-fill demo login credentials
+        function fillLogin(username, password) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+        }
+
+        // Show alert message
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type}`;
+            alert.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Handle login form submission
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loginBtn = document.getElementById('login-btn');
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+
+            const formData = new FormData(e.target);
+            const loginData = {
+                username: formData.get('username'),
+                password: formData.get('password')
+            };
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include', // Include cookies for session
+                    body: JSON.stringify(loginData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert(`Welcome back, ${result.user.username}! Redirecting to dashboard...`, 'success');
+                    
+                    // Store session token in localStorage as backup to cookies
+                    localStorage.setItem('session_token', result.session_token);
+                    localStorage.setItem('user_info', JSON.stringify(result.user));
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    showAlert(result.error || 'Login failed', 'error');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Login to Blockchain';
+                }
+            } catch (error) {
+                showAlert('Network error. Please try again.', 'error');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login to Blockchain';
+            }
+        });
+
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/user/info', {
+                    credentials: 'include' // Use session cookies
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        showAlert(`Already logged in as ${result.data.username}. Redirecting...`, 'success');
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 1000);
+                    }
+                }
+            } catch (error) {
+                // Ignore errors, user probably not logged in
+            }
+        });
+    </script>
+</body>
+</html>

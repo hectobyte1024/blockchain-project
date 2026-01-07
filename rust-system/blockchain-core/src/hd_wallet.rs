@@ -17,7 +17,6 @@ use crate::{Hash256, BlockchainError, Result};
 use crate::transaction::{Transaction, TransactionInput, TransactionOutput};
 use crate::utxo::{UTXOSet, UTXO};
 use crate::tx_builder::TransactionManager;
-use blockchain_ffi::types::Hash256Wrapper;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, BTreeMap};
 use std::sync::Arc;
@@ -711,7 +710,7 @@ impl HDWallet {
         // Add inputs
         for utxo in &selected_utxos {
             let mut input = TransactionInput::new(
-                Hash256Wrapper::from_hash256(&utxo.tx_hash),
+                utxo.tx_hash,
                 utxo.output_index,
                 Vec::new(), // Will be filled with signature
             );
@@ -1210,17 +1209,15 @@ impl Default for TxBuildOptions {
 
 // Helper functions
 
-/// Derive public key from private key (simplified ECDSA)
+/// Derive public key from private key using secp256k1 ECDSA
 fn derive_public_key_from_private(private_key: &[u8]) -> Result<Vec<u8>> {
-    let mut hasher = Sha256::new();
-    hasher.update(private_key);
-    hasher.update(b"edunet_public_key");
-    let hash = hasher.finalize();
-    
-    let mut public_key = Vec::with_capacity(33);
-    public_key.push(0x02); // Compressed public key prefix
-    public_key.extend_from_slice(&hash[0..32]);
-    Ok(public_key)
+    if private_key.len() != 32 {
+        return Err(BlockchainError::CryptoError("Private key must be 32 bytes".to_string()));
+    }
+    let mut key_array = [0u8; 32];
+    key_array.copy_from_slice(private_key);
+    let pubkey = crate::crypto::derive_public_key(&key_array)?;
+    Ok(pubkey.to_vec())
 }
 
 /// Derive P2PKH address from public key
@@ -1341,18 +1338,9 @@ fn derive_seed_from_mnemonic(mnemonic: &str, passphrase: &str) -> Result<[u8; 64
     Ok(seed)
 }
 
-/// Sign hash with private key (simplified ECDSA)
+/// Sign hash with private key using secp256k1 ECDSA
 fn sign_hash(hash: &Hash256, private_key: &[u8; 32]) -> Result<Vec<u8>> {
-    let mut hasher = Sha256::new();
-    hasher.update(private_key);
-    hasher.update(hash);
-    let signature_hash = hasher.finalize();
-    
-    let mut signature = Vec::with_capacity(64);
-    signature.extend_from_slice(&signature_hash[..32]); // r component
-    signature.extend_from_slice(&private_key[..32]);    // s component (simplified)
-    
-    Ok(signature)
+    crate::crypto::sign_hash(hash, private_key)
 }
 
 #[cfg(test)]

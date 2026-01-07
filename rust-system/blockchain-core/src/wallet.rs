@@ -17,14 +17,8 @@ use rand::RngCore;
 use sha2::{Sha256, Digest};
 use tokio::sync::RwLock;
 
-/// A cryptographic private key (32 bytes)
-pub type PrivateKey = [u8; 32];
-
-/// A cryptographic public key (33 bytes compressed)
-pub type PublicKey = [u8; 33];
-
-/// A blockchain address string (e.g., "edu1q...")
-pub type Address = String;
+// Use types from crate root (lib.rs)
+use crate::{PrivateKey, PublicKey, Address};
 
 // Helper functions for serializing byte arrays
 fn serialize_private_key<S: Serializer>(key: &PrivateKey, serializer: S) -> std::result::Result<S::Ok, S::Error> {
@@ -52,9 +46,7 @@ fn deserialize_public_key<'de, D: Deserializer<'de>>(deserializer: D) -> std::re
     if bytes.len() != 33 {
         return Err(serde::de::Error::custom("Invalid public key length"));
     }
-    let mut array = [0u8; 33];
-    array.copy_from_slice(&bytes);
-    Ok(array)
+    Ok(bytes)  // Return Vec<u8> directly
 }
 
 /// Wallet containing keys and metadata
@@ -132,6 +124,37 @@ impl Wallet {
         })
     }
     
+    /// Create wallet from hex-encoded private key
+    pub fn from_private_key_hex(hex_key: &str) -> Result<Self> {
+        let bytes = hex::decode(hex_key)
+            .map_err(|e| BlockchainError::InvalidPrivateKey(format!("Invalid hex: {}", e)))?;
+        
+        if bytes.len() != 32 {
+            return Err(BlockchainError::InvalidPrivateKey(format!("Invalid key length: {}", bytes.len())));
+        }
+        
+        let mut private_key = [0u8; 32];
+        private_key.copy_from_slice(&bytes);
+        
+        let public_key = Self::derive_public_key(&private_key)?;
+        let address = Self::derive_address(&public_key)?;
+        
+        Ok(Wallet {
+            id: Uuid::new_v4(),
+            name: "Imported Wallet".to_string(),
+            private_key,
+            public_key,
+            address,
+            created_at: Utc::now(),
+            balance: 0,
+        })
+    }
+    
+    /// Get private key as hex string
+    pub fn private_key_hex(&self) -> Result<String> {
+        Ok(hex::encode(self.private_key))
+    }
+    
     /// Generate a cryptographically secure private key
     fn generate_private_key() -> Result<PrivateKey> {
         let mut key = [0u8; 32];
@@ -146,20 +169,9 @@ impl Wallet {
         Ok(key)
     }
     
-    /// Derive public key from private key (simplified ECDSA)
+    /// Derive public key from private key using secp256k1 ECDSA
     fn derive_public_key(private_key: &PrivateKey) -> Result<PublicKey> {
-        // Simplified public key derivation
-        // In production, use secp256k1 curve operations
-        let mut hasher = Sha256::new();
-        hasher.update(private_key);
-        hasher.update(b"edunet_public_key");
-        let hash = hasher.finalize();
-        
-        let mut public_key = [0u8; 33];
-        public_key[0] = 0x02; // Compressed public key prefix
-        public_key[1..33].copy_from_slice(&hash[0..32]);
-        
-        Ok(public_key)
+        crate::crypto::derive_public_key(private_key)
     }
     
     /// Derive blockchain address from public key

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace - Edunet</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="/static/js/shared.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Edunet</span>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="/marketplace" class="nav-link">
+                        <i class="fas fa-store"></i>
+                        <span>Marketplace</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/loans" class="nav-link">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <span>Loans</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/nfts" class="nav-link">
+                        <i class="fas fa-palette"></i>
+                        <span>NFTs</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/invest" class="nav-link">
+                        <i class="fas fa-rocket"></i>
+                        <span>Invest</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/wallet" class="nav-link">
+                        <i class="fas fa-wallet"></i>
+                        <span>Wallet</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="sidebar-user-name">Loading...</div>
+                        <div class="user-university" id="sidebar-user-university">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header header-gradient">
+                <div class="header-left">
+                    <h1>Marketplace</h1>
+                    <p>Buy and sell academic resources, services, and more</p>
+                </div>
+                <div class="header-right">
+                    <button class="btn-primary" id="list-item-btn">
+                        <i class="fas fa-plus"></i>
+                        List Item
+                    </button>
+                    <div class="wallet-info">
+                        <i class="fas fa-wallet"></i>
+                        <span class="balance" id="wallet-balance">Loading...</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Filters and Search -->
+            <div class="marketplace-filters">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search items..." id="search-input">
+                </div>
+                
+                <div class="filter-group">
+                    <select id="category-filter">
+                        <option value="">All Categories</option>
+                        <option value="textbooks">Textbooks</option>
+                        <option value="notes">Study Notes</option>
+                        <option value="tutoring">Tutoring</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="software">Software</option>
+                        <option value="services">Services</option>
+                    </select>
+                    
+                    <select id="type-filter">
+                        <option value="">All Types</option>
+                        <option value="physical">Physical</option>
+                        <option value="digital">Digital</option>
+                        <option value="service">Service</option>
+                    </select>
+                    
+                    <select id="price-filter">
+                        <option value="">Any Price</option>
+                        <option value="0-25">0-25 EDU</option>
+                        <option value="25-100">25-100 EDU</option>
+                        <option value="100-500">100-500 EDU</option>
+                        <option value="500+">500+ EDU</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Marketplace Grid -->
+            <div class="marketplace-grid" id="marketplace-grid">
+                <!-- Items will be loaded dynamically -->
+            </div>
+
+            <!-- Load More Button -->
+            <div class="load-more-container">
+                <button class="btn-secondary" id="load-more-btn">Load More Items</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Item Modal -->
+    <div id="create-item-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>List New Item</h2>
+                <button class="modal-close" onclick="closeCreateItemModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="create-item-form" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="item-title">Title *</label>
+                        <input type="text" id="item-title" name="title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="item-category">Category *</label>
+                        <select id="item-category" name="category" required>
+                            <option value="">Select Category</option>
+                            <option value="textbooks">Textbooks</option>
+                            <option value="notes">Study Notes</option>
+                            <option value="tutoring">Tutoring</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="software">Software</option>
+                            <option value="services">Services</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="item-description">Description *</label>
+                    <textarea id="item-description" name="description" rows="4" required></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="item-type">Type *</label>
+                        <select id="item-type" name="item_type" required>
+                            <option value="">Select Type</option>
+                            <option value="physical">Physical Item</option>
+                            <option value="digital">Digital Item</option>
+                            <option value="service">Service</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="item-price">Price (EDU) *</label>
+                        <input type="number" id="item-price" name="price" min="0" step="0.01" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="item-images">Images</label>
+                    <input type="file" id="item-images" name="images" multiple accept="image/*">
+                    <small>Upload up to 5 images (max 5MB each)</small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeCreateItemModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">List Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Item Detail Modal -->
+    <div id="item-detail-modal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h2 id="detail-title">Item Details</h2>
+                <button class="modal-close" onclick="closeItemDetailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="item-detail-content">
+                <div class="item-images">
+                    <div class="main-image">
+                        <img id="detail-main-image" src="" alt="">
+                    </div>
+                    <div class="thumbnail-images" id="detail-thumbnails">
+                        <!-- Thumbnails will be loaded dynamically -->
+                    </div>
+                </div>
+                
+                <div class="item-info">
+                    <div class="item-header">
+                        <h3 id="detail-item-title">Loading...</h3>
+                        <div class="item-price" id="detail-price">0 EDU</div>
+                    </div>
+                    
+                    <div class="item-meta">
+                        <span class="item-category" id="detail-category">Category</span>
+                        <span class="item-type" id="detail-type">Type</span>
+                        <span class="item-date" id="detail-date">Listed date</span>
+                    </div>
+                    
+                    <div class="seller-info">
+                        <div class="seller-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="seller-details">
+                            <div class="seller-name" id="detail-seller-name">Seller Name</div>
+                            <div class="seller-university" id="detail-seller-university">University</div>
+                            <div class="seller-rating">
+                                <i class="fas fa-star"></i>
+                                <span id="detail-seller-rating">4.8</span>
+                                <span class="rating-count">(23 reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="item-description">
+                        <h4>Description</h4>
+                        <p id="detail-description">Loading description...</p>
+                    </div>
+                    
+                    <div class="item-actions">
+                        <button class="btn-primary large-btn" onclick="purchaseItem()">
+                            <i class="fas fa-shopping-cart"></i>
+                            Purchase Item
+                        </button>
+                        <button class="btn-secondary" onclick="contactSeller()">
+                            <i class="fas fa-message"></i>
+                            Contact Seller
+                        </button>
+                        <button class="btn-outline" onclick="addToWishlist()">
+                            <i class="fas fa-heart"></i>
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/marketplace.js"></script>
+    <script>
+        let marketplace;
+        
+        // Initialize global EdunetApp and Marketplace
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - starting initialization');
+            
+            // Set up button click handler immediately
+            const listItemBtn = document.getElementById('list-item-btn');
+            if (listItemBtn) {
+                console.log('Found list-item-btn, attaching click handler');
+                listItemBtn.addEventListener('click', function(e) {
+                    console.log('BUTTON CLICKED VIA EVENT LISTENER!');
+                    e.preventDefault();
+                    
+                    const modal = document.getElementById('create-item-modal');
+                    console.log('Modal element:', modal);
+                    if (modal) {
+                        modal.classList.add('show');
+                        document.body.style.overflow = 'hidden';
+                        console.log('Modal opened!');
+                    } else {
+                        console.error('Modal not found!');
+                    }
+                });
+            } else {
+                console.error('list-item-btn not found!');
+            }
+            
+            if (typeof EdunetApp !== 'undefined') {
+                window.edunetApp = new EdunetApp();
+                console.log('EdunetApp initialized successfully');
+            } else {
+                console.error('EdunetApp class not found - shared.js may not have loaded');
+            }
+            
+            // Initialize Marketplace
+            try {
+                if (typeof Marketplace !== 'undefined') {
+                    marketplace = new Marketplace();
+                    window.marketplace = marketplace; // Also set as global
+                    console.log('Marketplace initialized successfully', marketplace);
+                } else {
+                    console.error('Marketplace class not found');
+                }
+            } catch (error) {
+                console.error('Error initializing Marketplace:', error);
+                // Create a minimal fallback
+                marketplace = {
+                    showModal: function(id) {
+                        const modal = document.getElementById(id);
+                        if (modal) {
+                            modal.classList.add('show');
+                            document.body.style.overflow = 'hidden';
+                        }
+                    },
+                    closeModal: function(id) {
+                        const modal = document.getElementById(id);
+                        if (modal) {
+                            modal.classList.remove('show');
+                            document.body.style.overflow = 'auto';
+                        }
+                    }
+                };
+                window.marketplace = marketplace;
+                console.log('Created fallback marketplace object');
+            }
+        });
+        
+        // Global functions for modal control
+        function openCreateItemModal() {
+            console.log('openCreateItemModal called');
+            console.log('marketplace object:', marketplace);
+            console.log('marketplace type:', typeof marketplace);
+            
+            if (marketplace) {
+                console.log('Calling marketplace.showModal');
+                marketplace.showModal('create-item-modal');
+            } else {
+                console.error('marketplace is not defined!');
+                // Fallback: try direct DOM manipulation
+                const modal = document.getElementById('create-item-modal');
+                console.log('Modal element:', modal);
+                if (modal) {
+                    modal.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                    console.log('Modal opened directly');
+                }
+            }
+        }
+        
+        function closeCreateItemModal() {
+            if (marketplace) {
+                marketplace.closeModal('create-item-modal');
+            }
+        }
+        
+        function closeItemDetailModal() {
+            if (marketplace) {
+                marketplace.closeModal('item-detail-modal');
+            }
+        }
+        
+        function purchaseItem() {
+            if (window.purchaseItem) {
+                window.purchaseItem();
+            }
+        }
+        
+        function contactSeller() {
+            if (window.contactSeller) {
+                window.contactSeller();
+            }
+        }
+        
+        function addToWishlist() {
+            if (marketplace) {
+                marketplace.showNotification('Wishlist feature coming soon!', 'info');
+            }
+        }
+    </script>
+</body>
+</html>

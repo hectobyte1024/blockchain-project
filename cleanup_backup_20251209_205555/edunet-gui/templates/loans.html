@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loans - Edunet</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="/static/js/shared.js"></script>
+    <script src="/static/js/loan.js" defer></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Edunet</span>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/marketplace" class="nav-link">
+                        <i class="fas fa-store"></i>
+                        <span>Marketplace</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="/loans" class="nav-link">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <span>Loans</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/nfts" class="nav-link">
+                        <i class="fas fa-palette"></i>
+                        <span>NFTs</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/invest" class="nav-link">
+                        <i class="fas fa-rocket"></i>
+                        <span>Invest</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/wallet" class="nav-link">
+                        <i class="fas fa-wallet"></i>
+                        <span>Wallet</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="sidebar-user-name">Loading...</div>
+                        <div class="user-university" id="sidebar-user-university">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header header-gradient">
+                <div class="header-left">
+                    <h1>Proof-of-Potential Loans</h1>
+                    <p>Access funding based on your academic achievements and future potential</p>
+                </div>
+                <div class="header-right">
+                    <button class="btn-primary" onclick="document.getElementById('loan-application-section').scrollIntoView({ behavior: 'smooth' })">
+                        <i class="fas fa-plus"></i>
+                        Apply for Loan
+                    </button>
+                    <div class="wallet-info">
+                        <i class="fas fa-wallet"></i>
+                        <span class="balance" id="wallet-balance">Loading...</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Available Loans -->
+            <div class="available-loans-section">
+                <div class="section-header">
+                    <h2>Available Loans</h2>
+                    <div class="loan-filters">
+                        <button class="filter-btn active" onclick="loanManager.loadAllLoans('all').then(() => loanManager.renderLoans('loans-list', 'all')); this.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); this.classList.add('active');">
+                            All
+                        </button>
+                        <button class="filter-btn" onclick="loanManager.loadAllLoans('pending').then(() => loanManager.renderLoans('loans-list', 'pending')); this.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); this.classList.add('active');">
+                            Pending
+                        </button>
+                        <button class="filter-btn" onclick="loanManager.loadAllLoans('funded').then(() => loanManager.renderLoans('loans-list', 'funded')); this.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); this.classList.add('active');">
+                            Funded
+                        </button>
+                    </div>
+                </div>
+                <div id="loans-list" class="loans-container">
+                    <div class="loading-state">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p>Loading loans...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loan Application Content -->
+            <div id="loan-application-section" class="loans-container">
+                <div class="loan-application">
+                    <h2>Apply for Academic Loan</h2>
+                    <p>Get funding based on your academic potential and future earning capacity.</p>
+                    
+                    <form id="loan-application-form" class="application-form">
+                        <div class="form-section">
+                            <h3>Personal Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="loan-full-name">Full Name *</label>
+                                    <input type="text" id="loan-full-name" required placeholder="Enter your full name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="loan-university">University *</label>
+                                    <input type="text" id="loan-university" required placeholder="Your university">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="loan-field">Major/Field of Study *</label>
+                                    <input type="text" id="loan-field" required placeholder="Computer Science, Engineering, etc.">
+                                </div>
+                                <div class="form-group">
+                                    <label for="loan-year">Year of Study *</label>
+                                    <select id="loan-year" required>
+                                        <option value="Freshman">Freshman</option>
+                                        <option value="Sophomore">Sophomore</option>
+                                        <option value="Junior">Junior</option>
+                                        <option value="Senior">Senior</option>
+                                        <option value="Graduate">Graduate</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Academic Performance</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="loan-gpa">Current GPA *</label>
+                                    <input type="number" id="loan-gpa" required step="0.01" min="0" max="4.0" placeholder="3.75">
+                                </div>
+                                <div class="form-group">
+                                    <label for="loan-test-score">SAT/ACT Score *</label>
+                                    <input type="number" id="loan-test-score" required placeholder="1450">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="loan-achievements">Academic Achievements</label>
+                                <textarea id="loan-achievements" rows="3" placeholder="List your academic achievements, awards, honors, etc."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Loan Details</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="loan-amount">Loan Amount (EDU) *</label>
+                                    <input type="number" id="loan-amount" required min="1" max="10000" placeholder="2500">
+                                </div>
+                                <div class="form-group">
+                                    <label for="loan-purpose-select">Loan Purpose *</label>
+                                    <select id="loan-purpose-select" required>
+                                        <option value="Tuition Fees">Tuition Fees</option>
+                                        <option value="Research Project">Research Project</option>
+                                        <option value="Equipment Purchase">Equipment Purchase</option>
+                                        <option value="Study Materials">Study Materials</option>
+                                        <option value="Living Expenses">Living Expenses</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="loan-purpose-detail">Detailed Purpose *</label>
+                                <textarea id="loan-purpose-detail" required rows="4" placeholder="Explain how you plan to use the loan funds..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Future Earning Potential</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="loan-grad-year">Expected Graduation Year *</label>
+                                    <input type="number" id="loan-grad-year" required min="2024" max="2030" placeholder="2025">
+                                </div>
+                                <div class="form-group">
+                                    <label for="loan-career">Career Field *</label>
+                                    <input type="text" id="loan-career" required placeholder="Software Engineering, Medicine, etc.">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="loan-salary">Expected Starting Salary ($) *</label>
+                                    <input type="number" id="loan-salary" required placeholder="75000">
+                                </div>
+                                <div class="form-group">
+                                    <label for="loan-term">Preferred Repayment Term *</label>
+                                    <select id="loan-term" required>
+                                        <option>12 months</option>
+                                        <option>24 months</option>
+                                        <option>36 months</option>
+                                        <option>48 months</option>
+                                        <option>60 months</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="this.closest('form').reset()">Clear Form</button>
+                            <button type="submit" class="btn-primary large-btn">Submit Application</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="loan-info-panel">
+                    <div class="potential-score">
+                        <h3>Your Proof-of-Potential Score</h3>
+                        <div class="score-circle">
+                            <div class="score-value">8.7</div>
+                            <div class="score-label">out of 10</div>
+                        </div>
+                        <div class="score-breakdown">
+                            <div class="score-item">
+                                <span>Academic Performance</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" style="width: 90%"></div>
+                                </div>
+                                <span>9.0</span>
+                            </div>
+                            <div class="score-item">
+                                <span>University Prestige</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" style="width: 95%"></div>
+                                </div>
+                                <span>9.5</span>
+                            </div>
+                            <div class="score-item">
+                                <span>Field Potential</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" style="width: 85%"></div>
+                                </div>
+                                <span>8.5</span>
+                            </div>
+                            <div class="score-item">
+                                <span>Market Demand</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" style="width: 80%"></div>
+                                </div>
+                                <span>8.0</span>
+                            </div>
+                        </div>
+                        <p class="score-description">
+                            Your high potential score qualifies you for premium loan rates with flexible repayment terms.
+                        </p>
+                    </div>
+
+                    <div class="loan-terms">
+                        <h3>Estimated Loan Terms</h3>
+                        <div class="terms-grid">
+                            <div class="term-item">
+                                <div class="term-label">Interest Rate</div>
+                                <div class="term-value">3.2% APR</div>
+                            </div>
+                            <div class="term-item">
+                                <div class="term-label">Max Loan Amount</div>
+                                <div class="term-value">5,000 EDU</div>
+                            </div>
+                            <div class="term-item">
+                                <div class="term-label">Repayment Period</div>
+                                <div class="term-value">Up to 60 months</div>
+                            </div>
+                            <div class="term-item">
+                                <div class="term-label">Processing Time</div>
+                                <div class="term-value">24-48 hours</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recent-applications">
+                        <h3>Your Applications</h3>
+                        <div class="application-list">
+                            <div class="application-item">
+                                <div class="app-icon approved">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="app-info">
+                                    <div class="app-title">Research Equipment Loan</div>
+                                    <div class="app-amount">1,200 EDU</div>
+                                    <div class="app-status approved">Approved</div>
+                                </div>
+                                <div class="app-date">Jan 15, 2024</div>
+                            </div>
+                            
+                            <div class="application-item">
+                                <div class="app-icon pending">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="app-info">
+                                    <div class="app-title">Tuition Support</div>
+                                    <div class="app-amount">3,500 EDU</div>
+                                    <div class="app-status pending">Under Review</div>
+                                </div>
+                                <div class="app-date">Jan 20, 2024</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize and render loans after manager loads
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof EdunetApp !== 'undefined') {
+                window.edunetApp = new EdunetApp();
+                console.log('EdunetApp initialized successfully');
+            } else {
+                console.error('EdunetApp class not found - shared.js may not have loaded');
+            }
+
+            // Wait for Loan manager to be ready
+            const checkLoanManager = setInterval(() => {
+                if (window.loanManager) {
+                    clearInterval(checkLoanManager);
+                    // Render loans after a short delay to ensure data is loaded
+                    setTimeout(() => {
+                        loanManager.renderLoans('loans-list', 'all');
+                    }, 1000);
+                }
+            }, 100);
+
+            // Dynamic score calculator
+            const gpaInput = document.getElementById('loan-gpa');
+            const testScoreInput = document.getElementById('loan-test-score');
+            
+            if (gpaInput && testScoreInput) {
+                const updateScore = () => {
+                    const gpa = parseFloat(gpaInput.value) || 0;
+                    const testScore = parseInt(testScoreInput.value) || 0;
+                    
+                    if (gpa > 0 && testScore > 0 && window.loanManager) {
+                        const score = loanManager.calculateScore(gpa, testScore);
+                        
+                        // Update displayed score if element exists
+                        const scoreElement = document.querySelector('.score-value');
+                        if (scoreElement) {
+                            scoreElement.innerHTML = `${score.toFixed(1)}<span>/10</span>`;
+                        }
+                    }
+                };
+                
+                gpaInput.addEventListener('input', updateScore);
+                testScoreInput.addEventListener('input', updateScore);
+            }
+        });
+    </script>
+</body>
+</html>

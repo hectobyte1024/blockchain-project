@@ -1,41 +1,43 @@
-# Hybrid Blockchain Development Workspace
+# Pure Rust Blockchain Development Workspace
 
-This workspace contains an enterprise-grade hybrid blockchain system combining C++ core engine with Rust system layer.
+This workspace contains a production-grade **pure Rust** blockchain system with real ECDSA cryptography.
 
 ## Project Architecture
-- `cpp-core/`: High-performance C++ blockchain engine (transactions, blocks, crypto, mining)
-- `rust-system/`: Safe Rust system layer with FFI bindings to C++ core
-- `docs/`: Technical documentation and specifications  
-- `tests/`: Integration and performance tests
+- `rust-system/blockchain-core`: Core blockchain logic (consensus, UTXO, transactions, crypto)
+- `blockchain-node/`: Full node implementation (mining, RPC, mempool)
+- `rust-system/blockchain-network/`: P2P networking layer
+- `edunet-web/`: Web interface for end users
+- `voucher-pdf-gen/`: QR code voucher generation
 
-## Hybrid Design Benefits
-- **Performance**: C++ core handles computationally intensive operations (mining, crypto, validation)
-- **Safety**: Rust layer provides memory safety and async networking/RPC interfaces
-- **Interoperability**: FFI layer allows seamless integration between both languages
-- **Best of Both**: Combines C++ speed with Rust safety and modern tooling
+## Technology Stack
+- **100% Pure Rust** - No C++, no FFI, memory-safe by design
+- **secp256k1 ECDSA** - Real cryptographic signatures
+- **Proof-of-Work** - Bitcoin-style consensus
+- **UTXO Model** - Unspent transaction output tracking
+- **Async Rust** - Tokio for high-performance I/O
 
-## Completed Tasks
-- [x] Created hybrid workspace structure
-- [x] Set up C++ core engine with CMake
-- [x] Set up Rust system layer with Cargo
-- [x] Implement cryptographic infrastructure (C++)
-- [x] Build blockchain data structures (C++ + Rust wrappers)
-- [ ] Develop hybrid consensus mechanism
-- [ ] Create async P2P networking layer (Rust)
-- [ ] Implement virtual machine (C++)
-- [ ] Build mempool and transaction processing
-- [ ] Add wallet and key management
+## Completed Features
+- [x] ✅ Pure Rust blockchain core (consensus, UTXO, mempool)
+- [x] ✅ Real secp256k1 ECDSA signatures (not placeholders!)
+- [x] ✅ Proof-of-Work mining with configurable difficulty
+- [x] ✅ Transaction validation with signature verification
+- [x] ✅ Bitcoin-style SIGHASH_ALL transaction signing
+- [x] ✅ Coinbase rewards (50 EDU/block) with maturity rules
+- [x] ✅ Treasury coin sales system with proper signing
+- [x] ✅ RPC interface (JSON-RPC over HTTP)
+- [x] ✅ Block storage and persistence
+
+## In Progress / TODO
+- [ ] P2P networking (peer discovery, block/tx broadcasting)
+- [ ] Smart contracts (integrate revm for EVM compatibility)
+- [ ] Multi-signature transactions (P2SH)
+- [ ] Time-locked transactions
+- [ ] Difficulty adjustment algorithm
+- [ ] Multiple SIGHASH types (SINGLE, NONE, ANYONECANPAY)
 
 ## Development Guidelines
 - This is production-grade blockchain technology, not educational examples
-- C++ core focuses on performance-critical blockchain operations
-- Rust layer provides safe interfaces, networking, and system integration
-- Focus on security, scalability, and performance
-- Include comprehensive testing and documentation
-
-## Development Guidelines
-- This is production-grade blockchain technology, not educational examples
-- C++ core focuses on performance-critical blockchain operations
-- Rust layer provides safe interfaces, networking, and system integration
-- Focus on security, scalability, and performance
-- Include comprehensive testing and documentation
+- **Security first**: Real crypto, real validation, no shortcuts
+- Pure Rust: No unsafe code unless absolutely necessary
+- Test everything: Unit tests, integration tests, end-to-end tests
+- Document clearly: Explain complex algorithms and security considerations

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduNet - All Users Overview</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: #f5f5f5; 
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin-bottom: 30px; 
+            text-align: center;
+        }
+        .users-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+            gap: 20px; 
+        }
+        .user-card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .user-header { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 20px; 
+        }
+        .user-avatar { 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            background: linear-gradient(45deg, #667eea, #764ba2); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 20px; 
+            margin-right: 15px; 
+        }
+        .user-info h3 { margin-bottom: 5px; }
+        .user-info p { color: #666; font-size: 14px; }
+        .wallet-info { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+        }
+        .wallet-address { 
+            font-family: monospace; 
+            font-size: 12px; 
+            color: #495057; 
+            word-break: break-all; 
+            margin: 5px 0; 
+        }
+        .balance { 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #28a745; 
+            margin-bottom: 10px; 
+        }
+        .stats { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            text-align: center; 
+        }
+        .stat { 
+            background: #e9ecef; 
+            padding: 10px; 
+            border-radius: 5px; 
+        }
+        .stat-number { 
+            font-weight: bold; 
+            color: #495057; 
+        }
+        .stat-label { 
+            font-size: 12px; 
+            color: #6c757d; 
+        }
+        .login-btn { 
+            width: 100%; 
+            padding: 10px; 
+            background: #667eea; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-weight: 500; 
+            margin-top: 15px; 
+        }
+        .login-btn:hover { background: #5a67d8; }
+        .network-status { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            margin-bottom: 30px; 
+        }
+        .refresh-btn { 
+            background: #28a745; 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin-left: 15px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 EduNet Blockchain - All Users</h1>
+            <p>Multi-User Wallet System Overview</p>
+        </div>
+
+        <div class="network-status">
+            <h3 style="margin-bottom: 15px;">🌐 Network Status 
+                <button class="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
+            </h3>
+            <div id="network-info">Loading network information...</div>
+        </div>
+
+        <div class="users-grid" id="users-grid">
+            <!-- Users will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        // Load all users and their wallet information
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users');
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayUsers(result.data);
+                } else {
+                    document.getElementById('users-grid').innerHTML = 
+                        '<p>Failed to load users</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load users:', error);
+                document.getElementById('users-grid').innerHTML = 
+                    '<p>Error loading users</p>';
+            }
+        }
+
+        // Display users in the grid
+        function displayUsers(users) {
+            const grid = document.getElementById('users-grid');
+            
+            if (users.length === 0) {
+                grid.innerHTML = '<p>No users registered yet</p>';
+                return;
+            }
+
+            grid.innerHTML = users.map(user => {
+                const initial = user.username.charAt(0).toUpperCase();
+                const joinDate = new Date(user.created_at).toLocaleDateString();
+                const lastLogin = user.last_login ? 
+                    new Date(user.last_login).toLocaleDateString() : 'Never';
+
+                return `
+                    <div class="user-card">
+                        <div class="user-header">
+                            <div class="user-avatar">${initial}</div>
+                            <div class="user-info">
+                                <h3>${user.username}</h3>
+                                <p>${user.university || 'University not specified'}</p>
+                                <p>Reputation: ${user.reputation_score}/100</p>
+                            </div>
+                        </div>
+                        
+                        <div class="wallet-info">
+                            <div class="balance">💳 Demo Balance: ${Math.floor(Math.random() * 1000)} EDU</div>
+                            <div><strong>Wallet Address:</strong></div>
+                            <div class="wallet-address">${user.wallet_address}</div>
+                        </div>
+
+                        <div class="stats">
+                            <div class="stat">
+                                <div class="stat-number">${Math.floor(Math.random() * 50)}</div>
+                                <div class="stat-label">Transactions</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number">${Math.floor(Math.random() * 10)}</div>
+                                <div class="stat-label">Blocks Mined</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number">${user.is_verified ? '✅' : '❌'}</div>
+                                <div class="stat-label">Verified</div>
+                            </div>
+                        </div>
+
+                        <button class="login-btn" onclick="quickLogin('${user.username}')">
+                            🔑 Login as ${user.username}
+                        </button>
+
+                        <div style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;">
+                            Joined: ${joinDate} | Last Login: ${lastLogin}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Quick login function (for demo purposes)
+        function quickLogin(username) {
+            // For demo users, we know the password is 'password123'
+            const loginData = {
+                username: username,
+                password: 'password123'
+            };
+
+            fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(loginData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Store session token
+                    localStorage.setItem('session_token', result.session_token);
+                    
+                    // Open dashboard in new window
+                    window.open('/dashboard', '_blank');
+                    
+                    alert(`✅ Logged in as ${username}! Dashboard opened in new tab.`);
+                } else {
+                    alert('❌ Login failed: ' + result.error);
+                }
+            })
+            .catch(error => {
+                alert('❌ Network error: ' + error.message);
+            });
+        }
+
+        // Load network status
+        async function loadNetworkStatus() {
+            try {
+                const [networkResponse, statsResponse] = await Promise.all([
+                    fetch('/api/v1/network/status').catch(() => ({ json: () => ({ success: false }) })),
+                    fetch('/api/users/stats').catch(() => ({ json: () => ({ success: false }) }))
+                ]);
+
+                const networkResult = await networkResponse.json();
+                const statsResult = await statsResponse.json();
+
+                let networkInfo = 'Network information unavailable';
+                
+                if (networkResult.success) {
+                    const data = networkResult.data;
+                    networkInfo = `
+                        🔗 ${data.connected_peers || 0} Connected Peers | 
+                        ⛏️ Block Height: ${data.block_height || 0} | 
+                        📊 ${data.mempool_size || 0} Pending Transactions |
+                        ${data.is_mining ? '🟢 Mining Active' : '🔴 Mining Inactive'}
+                    `;
+                }
+
+                if (statsResult.success) {
+                    const stats = statsResult.data;
+                    networkInfo += `<br>👥 ${stats.total_users || 0} Total Users | 
+                        ✅ ${stats.verified_users || 0} Verified | 
+                        🔗 ${stats.active_sessions || 0} Active Sessions |
+                        ⭐ ${(stats.average_reputation || 0).toFixed(1)} Avg Reputation`;
+                }
+
+                document.getElementById('network-info').innerHTML = networkInfo;
+            } catch (error) {
+                console.error('Failed to load network status:', error);
+            }
+        }
+
+        // Refresh all data
+        function refreshData() {
+            loadUsers();
+            loadNetworkStatus();
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshData();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(refreshData, 30000);
+        });
+    </script>
+</body>
+</html>

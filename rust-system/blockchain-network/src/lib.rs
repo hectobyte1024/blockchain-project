@@ -1,7 +1,7 @@
 //! High-performance async P2P networking layer for blockchain
 //!
-//! This module provides the networking infrastructure for the hybrid blockchain,
-//! leveraging Rust's async capabilities while integrating with the C++ core engine.
+//! Pure Rust async networking infrastructure for P2P communication,
+//! leveraging Rust's async capabilities and safety guarantees.
 
 pub mod peer;
 pub mod protocol; 
@@ -17,10 +17,12 @@ use std::{
     time::Duration,
 };
 use tokio::sync::broadcast;
-use tracing::info;
+use tracing::{info, warn};
 
 // Re-export commonly used types
-pub use blockchain_core::{Hash256, block::Block, transaction::Transaction};
+// Note: Transaction removed from re-export to avoid type ambiguity
+// Always import Transaction directly from blockchain_core::transaction::Transaction
+pub use blockchain_core::{Hash256, block::Block, consensus::ConsensusValidator};
 pub use uuid::Uuid;
 pub use tx_broadcast::{TransactionBroadcaster, TransactionPriority, BroadcastStats};
 
@@ -144,8 +146,8 @@ pub struct NetworkManager {
 }
 
 impl NetworkManager {
-    /// Create new network manager
-    pub fn new(config: NetworkConfig) -> Result<Self> {
+    /// Create new network manager with optional blockchain consensus for serving blockchain data
+    pub fn new(config: NetworkConfig, consensus: Option<Arc<ConsensusValidator>>) -> Result<Self> {
         // Create address manager
         let address_manager = Arc::new(discovery::AddressManager::new(config.dns_seeds.clone()));
         
@@ -157,11 +159,12 @@ impl NetworkManager {
             });
         }
         
-        // Create network swarm
+        // Create network swarm with consensus
         let (swarm, event_receiver) = swarm::NetworkSwarm::new(
             address_manager.clone(),
             config.our_services,
             config.listening_port,
+            consensus,
         );
         
         Ok(Self {

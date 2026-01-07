@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFTs - Edunet Blockchain</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="/static/js/shared.js"></script>
+    <script src="/static/js/nft.js" defer></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Edunet</span>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/marketplace" class="nav-link">
+                        <i class="fas fa-store"></i>
+                        <span>Marketplace</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/loans" class="nav-link">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <span>Loans</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="/nfts" class="nav-link">
+                        <i class="fas fa-palette"></i>
+                        <span>NFTs</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/invest" class="nav-link">
+                        <i class="fas fa-rocket"></i>
+                        <span>Invest</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/wallet" class="nav-link">
+                        <i class="fas fa-wallet"></i>
+                        <span>Wallet</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="sidebar-user-name">Loading...</div>
+                        <div class="user-university" id="sidebar-user-university">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header header-gradient">
+                <div class="header-left">
+                    <h1>NFT Gallery</h1>
+                    <p>Create, collect, and trade unique digital assets on EduNet</p>
+                </div>
+                <div class="header-right">
+                    <button class="btn-primary" onclick="nftManager.showMintModal()">
+                        <i class="fas fa-plus"></i> Mint NFT
+                    </button>
+                    <div class="wallet-info">
+                        <i class="fas fa-wallet"></i>
+                        <span class="balance" id="wallet-balance">Loading...</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- NFT Filters/Tabs -->
+            <div class="nft-filters">
+                <div class="filter-tabs">
+                    <button class="filter-tab active" onclick="nftManager.renderNFTGallery('nft-gallery', false)">
+                        <i class="fas fa-th"></i> All NFTs
+                    </button>
+                    <button class="filter-tab" onclick="nftManager.renderNFTGallery('nft-gallery', true)">
+                        <i class="fas fa-user"></i> My NFTs
+                    </button>
+                </div>
+                <div class="filter-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search NFTs..." id="nft-search">
+                </div>
+            </div>
+
+            <!-- NFT Gallery -->
+            <div id="nft-gallery" class="nft-gallery-container">
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p>Loading NFTs...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mint NFT Modal -->
+    <div id="mint-nft-modal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h2>Mint New NFT</h2>
+                <button class="modal-close" onclick="closeMintModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="mint-nft-form" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nft-title">Title *</label>
+                        <input type="text" id="nft-title" name="title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nft-category">Category *</label>
+                        <select id="nft-category" name="category" required>
+                            <option value="">Select Category</option>
+                            <option value="research">Research Paper</option>
+                            <option value="art">Digital Art</option>
+                            <option value="music">Music & Audio</option>
+                            <option value="code">Software & Code</option>
+                            <option value="data">Dataset</option>
+                            <option value="video">Video Course</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nft-description">Description *</label>
+                    <textarea id="nft-description" name="description" rows="4" required></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nft-price">Price (EDU)</label>
+                        <input type="number" id="nft-price" name="price" min="0" step="0.01">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nft-royalty">Royalty Percentage</label>
+                        <input type="number" id="nft-royalty" name="royalty" min="0" max="50" value="10">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nft-image">Image URL</label>
+                    <input type="text" id="nft-image" name="image_url" 
+                           placeholder="https://example.com/image.png or ipfs://...">
+                    <small>Optional: Link to NFT image (IPFS, HTTP, or data URI)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nft-metadata">Additional Metadata (JSON)</label>
+                    <textarea id="nft-metadata" name="metadata" rows="3" placeholder='{"author": "Your Name", "institution": "Your University"}'></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeMintModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Mint NFT (Fee: 5 EDU)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function closeMintModal() {
+            if (window.nftManager) {
+                nftManager.closeMintModal();
+            } else {
+                document.getElementById('mint-nft-modal').classList.remove('show');
+            }
+        }
+
+        // Initialize and render NFT gallery after manager loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Wait for NFT manager to be ready
+            const checkNFTManager = setInterval(() => {
+                if (window.nftManager) {
+                    clearInterval(checkNFTManager);
+                    // Render gallery after a short delay to ensure data is loaded
+                    setTimeout(() => {
+                        nftManager.renderNFTGallery('nft-gallery', false);
+                    }, 1000);
+                }
+            }, 100);
+
+            // Setup filter tabs
+            document.querySelectorAll('.filter-tab').forEach((tab, index) => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                });
+            });
+
+            // Setup search
+            const searchInput = document.getElementById('nft-search');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const query = e.target.value.toLowerCase();
+                    const nftCards = document.querySelectorAll('.nft-card');
+                    nftCards.forEach(card => {
+                        const title = card.querySelector('.nft-title')?.textContent.toLowerCase() || '';
+                        const desc = card.querySelector('.nft-description')?.textContent.toLowerCase() || '';
+                        if (title.includes(query) || desc.includes(query)) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

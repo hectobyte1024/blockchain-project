@@ -12,7 +12,6 @@ use crate::{
     transaction::{Transaction, TransactionInput, TransactionOutput},
     consensus::{ConsensusValidator, TxValidationContext},
 };
-use blockchain_ffi::types::Hash256Wrapper;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, BTreeMap, HashSet, VecDeque},
@@ -276,7 +275,7 @@ impl Mempool {
         // Check for conflicts (double-spending)
         let mut conflicting_txs = Vec::new();
         for input in &transaction.inputs {
-            let outpoint = (input.prev_tx_hash.0, input.prev_output_index);
+            let outpoint = (input.prev_tx_hash, input.prev_output_index);
             if let Some(existing_tx_hash) = self.outpoint_index.get(&outpoint) {
                 // Check if this is a valid RBF (Replace-By-Fee)
                 if self.config.enable_rbf && self.can_replace_transaction(&tx_hash, existing_tx_hash, &transaction).await? {
@@ -383,6 +382,17 @@ impl Mempool {
         Ok(())
     }
     
+    /// Get all pending transactions (ordered by priority and fee rate)
+    pub fn get_transactions(&self) -> Vec<Transaction> {
+        self.priority_index
+            .iter()
+            .rev()
+            .filter_map(|(_, tx_hash)| {
+                self.transactions.get(tx_hash).map(|entry| entry.transaction.clone())
+            })
+            .collect()
+    }
+    
     /// Get transactions for block construction (ordered by priority and fee rate)
     pub fn get_transactions_for_block(&self, max_block_size: usize) -> Vec<Transaction> {
         let mut transactions = Vec::new();
@@ -477,26 +487,55 @@ impl Mempool {
     
     /// Calculate transaction fee by checking inputs against UTXO set
     async fn calculate_transaction_fee(&self, transaction: &Transaction) -> Result<u64> {
-        if let Some(_consensus) = &self.consensus {
-            // In a real implementation, we would look up UTXOs to get input values
-            // For now, calculate a reasonable fee based on transaction structure
-            let base_fee = 10000; // Base fee
-            let input_fee = transaction.inputs.len() as u64 * 5000; // Fee per input
-            let script_fee = transaction.inputs.iter()
-                .map(|i| i.script_sig.len() as u64 * 10) // Fee based on script size
-                .sum::<u64>();
-            
-            Ok(base_fee + input_fee + script_fee)
-        } else {
-            // Fallback: reasonable fee calculation
-            let base_fee = 10000; // 10,000 satoshi base fee
-            let input_fee = transaction.inputs.len() as u64 * 5000; // 5,000 per input
-            let script_fee = transaction.inputs.iter()
-                .map(|i| i.script_sig.len() as u64 * 10) // 10 satoshi per byte
-                .sum::<u64>();
-            
-            Ok(base_fee + input_fee + script_fee)
+        // Calculate actual fee from inputs - outputs
+        if transaction.is_coinbase() {
+            return Ok(0); // Coinbase has no fee
         }
+        
+        // Get output sum
+        let output_sum: u64 = transaction.outputs.iter().map(|o| o.value).sum();
+        
+        // Get input sum by looking up UTXOs
+        let mut input_sum: u64 = 0;
+        
+        if let Some(consensus) = &self.consensus {
+            let utxo_set = consensus.get_utxo_set().await;
+            
+            for input in &transaction.inputs {
+                let outpoint = format!("{}:{}", hex::encode(&input.prev_tx_hash), input.prev_output_index);
+                if let Some(utxo) = utxo_set.get_utxo(&outpoint) {
+                    input_sum += utxo.value();
+                    tracing::debug!("Found UTXO {}: {} sats", outpoint, utxo.value());
+                } else {
+                    tracing::warn!("UTXO not found: {}", outpoint);
+                    // UTXO not found - invalid transaction
+                    return Err(BlockchainError::InvalidTransaction(
+                        format!("Input references non-existent UTXO: {}", outpoint)
+                    ));
+                }
+            }
+            
+            tracing::debug!("Transaction fee calculation: inputs={}, outputs={}, fee={}", 
+                input_sum, output_sum, input_sum.saturating_sub(output_sum));
+        } else {
+            // No consensus available - use simplified estimation
+            tracing::warn!("No consensus available for fee calculation, using estimation");
+            let base_fee = 10000;
+            let input_fee = transaction.inputs.len() as u64 * 5000;
+            let script_fee = transaction.inputs.iter()
+                .map(|i| i.script_sig.len() as u64 * 10)
+                .sum::<u64>();
+            return Ok(base_fee + input_fee + script_fee);
+        }
+        
+        // Fee is the difference
+        if input_sum < output_sum {
+            return Err(BlockchainError::InvalidTransaction(
+                format!("Outputs ({}) exceed inputs ({})", output_sum, input_sum)
+            ));
+        }
+        
+        Ok(input_sum - output_sum)
     }
     
     /// Check if transaction can replace existing transaction (RBF)
@@ -534,7 +573,7 @@ impl Mempool {
         // Outpoint index
         for input in &entry.transaction.inputs {
             self.outpoint_index.insert(
-                (input.prev_tx_hash.0, input.prev_output_index),
+                (input.prev_tx_hash, input.prev_output_index),
                 entry.tx_hash,
             );
         }
@@ -550,7 +589,7 @@ impl Mempool {
         
         // Outpoint index
         for input in &entry.transaction.inputs {
-            self.outpoint_index.remove(&(input.prev_tx_hash.0, input.prev_output_index));
+            self.outpoint_index.remove(&(input.prev_tx_hash, input.prev_output_index));
         }
     }
     
@@ -558,7 +597,7 @@ impl Mempool {
     fn update_dependency_graph(&mut self, entry: &MempoolEntry) {
         // Add dependencies based on inputs
         for input in &entry.transaction.inputs {
-            if let Some(parent_tx_hash) = self.outpoint_index.get(&(input.prev_tx_hash.0, input.prev_output_index)) {
+            if let Some(parent_tx_hash) = self.outpoint_index.get(&(input.prev_tx_hash, input.prev_output_index)) {
                 // Add dependency relationship
                 self.dependency_graph
                     .entry(*parent_tx_hash)
@@ -572,7 +611,7 @@ impl Mempool {
     fn remove_from_dependency_graph(&mut self, entry: &MempoolEntry) {
         // Remove as dependent
         for input in &entry.transaction.inputs {
-            if let Some(parent_tx_hash) = self.outpoint_index.get(&(input.prev_tx_hash.0, input.prev_output_index)) {
+            if let Some(parent_tx_hash) = self.outpoint_index.get(&(input.prev_tx_hash, input.prev_output_index)) {
                 if let Some(dependents) = self.dependency_graph.get_mut(parent_tx_hash) {
                     dependents.remove(&entry.tx_hash);
                     if dependents.is_empty() {
@@ -805,7 +844,7 @@ mod tests {
         // Create test transaction
         let tx = Transaction::new(
             1,
-            vec![TransactionInput::new(Hash256Wrapper::from_hash256(&[1u8; 32]), 0, vec![])],
+            vec![TransactionInput::new(Hash256::from_hash256(&[1u8; 32]), 0, vec![])],
             vec![TransactionOutput::create_p2pkh(100_000_000, "test_address").unwrap()],
         );
         
@@ -833,13 +872,13 @@ mod tests {
         // (in real scenario, fee = input_value - output_value)
         let tx1 = Transaction::new(
             1,
-            vec![TransactionInput::new(Hash256Wrapper::from_hash256(&[1u8; 32]), 0, vec![])],
+            vec![TransactionInput::new(Hash256::from_hash256(&[1u8; 32]), 0, vec![])],
             vec![TransactionOutput::create_p2pkh(50_000_000, "test1").unwrap()], // Lower output = higher fee
         );
         
         let tx2 = Transaction::new(
             1,
-            vec![TransactionInput::new(Hash256Wrapper::from_hash256(&[2u8; 32]), 0, vec![])],
+            vec![TransactionInput::new(Hash256::from_hash256(&[2u8; 32]), 0, vec![])],
             vec![TransactionOutput::create_p2pkh(90_000_000, "test2").unwrap()], // Higher output = lower fee
         );
         
@@ -866,7 +905,7 @@ mod tests {
         for i in 0..3 {
             let tx = Transaction::new(
                 1,
-                vec![TransactionInput::new(Hash256Wrapper::from_hash256(&[i as u8; 32]), 0, vec![])],
+                vec![TransactionInput::new(Hash256::from_hash256(&[i as u8; 32]), 0, vec![])],
                 vec![TransactionOutput::create_p2pkh(100_000_000 - i * 1000, "test").unwrap()],
             );
             
@@ -904,7 +943,7 @@ mod tests {
             
             let tx = Transaction::new(
                 1,
-                vec![TransactionInput::new(Hash256Wrapper::from_hash256(&input_hash), i as u32, vec![i as u8])],
+                vec![TransactionInput::new(Hash256::from_hash256(&input_hash), i as u32, vec![i as u8])],
                 vec![TransactionOutput::create_p2pkh(100_000_000 - (i as u64 * 1000), &format!("address_{}", i)).unwrap()],
             );
             

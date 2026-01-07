@@ -1,0 +1,50 @@
+[package]
+name = "edunet-web"
+version = "0.1.0"
+edition = "2021"
+authors = ["Blockchain Developer <dev@blockchain.com>"]
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Web framework
+axum = { version = "0.7", features = ["json", "query", "multipart", "form", "ws"] }
+tokio = { version = "1.0", features = ["full"] }
+tower = { version = "0.4", features = ["full"] }
+tower-http = { version = "0.5", features = ["fs", "cors"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Database (macros removed to avoid compile-time type checking issues)
+sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio-rustls", "chrono", "uuid"] }
+
+# Crypto and blockchain integration
+sha2 = "0.10"
+# Cryptographic utilities
+hex = "0.4"
+
+# QR code generation
+qrcode = "0.14"
+image = "0.24"
+base64 = "0.21"
+uuid = { version = "1.0", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Utilities
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+rand = "0.8"
+
+# Blockchain integration
+blockchain-rpc = { path = "../rust-system/blockchain-rpc" }
+blockchain-core = { path = "../rust-system/blockchain-core" }
+blockchain-network = { path = "../rust-system/blockchain-network" }
+
+# Template engine
+askama = "0.12"
+
+[dev-dependencies]
+tokio-test = "0.4"

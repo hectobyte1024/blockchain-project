@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Blockchain Transactions</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+        .transaction { 
+            background: #2a2a2a; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border: 1px solid #0f0;
+            border-radius: 5px;
+        }
+        h1 { color: #0ff; }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .info { color: #ff0; }
+    </style>
+</head>
+<body>
+    <h1>🔗 Blockchain Transaction Test</h1>
+    <div id="status"></div>
+    <div id="transactions"></div>
+
+    <script>
+        async function testAPI() {
+            const status = document.getElementById('status');
+            const txDiv = document.getElementById('transactions');
+            
+            status.innerHTML = '<p class="info">⏳ Fetching transactions from blockchain...</p>';
+            
+            try {
+                const response = await fetch('/api/blockchain/transactions/recent');
+                const data = await response.json();
+                
+                console.log('API Response:', data);
+                
+                if (data.success && data.recent_transactions) {
+                    status.innerHTML = `<p class="success">✅ Successfully loaded ${data.recent_transactions.length} transactions!</p>`;
+                    
+                    if (data.recent_transactions.length === 0) {
+                        txDiv.innerHTML = '<p class="info">No transactions found in blockchain</p>';
+                        return;
+                    }
+                    
+                    txDiv.innerHTML = '<h2>📝 Recent Transactions:</h2>';
+                    
+                    data.recent_transactions.forEach((tx, i) => {
+                        const txHtml = `
+                            <div class="transaction">
+                                <strong>Transaction #${i + 1}</strong><br>
+                                Hash: ${tx.hash}<br>
+                                From: ${tx.from_address}<br>
+                                To: ${tx.to_address}<br>
+                                Amount: ${tx.amount_edu.toFixed(2)} EDU<br>
+                                Block: ${tx.block_height || 'Pending'}<br>
+                                Status: ${tx.status}<br>
+                                Timestamp: ${new Date(tx.timestamp).toLocaleString()}
+                            </div>
+                        `;
+                        txDiv.innerHTML += txHtml;
+                    });
+                } else {
+                    status.innerHTML = '<p class="error">❌ API returned error or no data</p>';
+                    txDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                status.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+                console.error('Error:', error);
+            }
+        }
+        
+        // Test on load
+        testAPI();
+    </script>
+</body>
+</html>

@@ -46,6 +46,20 @@ pub enum MessageType {
     Reject,
     /// Alert message
     Alert,
+    /// Request blockchain height
+    GetBlockchainHeight,
+    /// Response with blockchain height
+    BlockchainHeight,
+    /// Request block by height
+    GetBlockByHeight,
+    /// Block data response
+    BlockData,
+    /// Request block headers
+    GetHeaders,
+    /// Block headers response
+    Headers,
+    /// Not found response
+    NotFound,
 }
 
 /// Main protocol message structure
@@ -92,6 +106,20 @@ pub enum MessagePayload {
     Reject(RejectMessage),
     /// Alert message
     Alert(AlertMessage),
+    /// Request blockchain height (no data)
+    GetBlockchainHeight,
+    /// Blockchain height response
+    BlockchainHeight(BlockchainHeightMessage),
+    /// Request block by height
+    GetBlockByHeight(GetBlockByHeightMessage),
+    /// Block data response
+    BlockData(BlockDataMessage),
+    /// Request block headers
+    GetHeaders(GetHeadersMessage),
+    /// Block headers response
+    Headers(HeadersMessage),
+    /// Not found response
+    NotFound(NotFoundMessage),
 }
 
 /// Version handshake message
@@ -462,6 +490,210 @@ pub mod services {
     pub const NODE_COMPACT_FILTERS: u64 = 1 << 6;
     /// Node can serve network addresses via DNS
     pub const NODE_NETWORK_LIMITED: u64 = 1 << 10;
+}
+
+// ==================== SYNC PROTOCOL MESSAGES ====================
+
+/// Blockchain height response message
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BlockchainHeightMessage {
+    /// Current blockchain height
+    pub height: u64,
+    /// Best block hash
+    pub best_block_hash: Hash256,
+    /// Total chain work
+    pub total_work: u64,
+}
+
+/// Request block by height message
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetBlockByHeightMessage {
+    /// Block height to request
+    pub height: u64,
+}
+
+/// Block data response message
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BlockDataMessage {
+    /// Block height
+    pub height: u64,
+    /// Block hash
+    pub block_hash: Hash256,
+    /// Serialized block data
+    pub block_data: Vec<u8>,
+}
+
+/// Request block headers message
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetHeadersMessage {
+    /// Protocol version
+    pub version: u32,
+    /// Starting block height
+    pub start_height: u64,
+    /// Ending block height (inclusive)
+    pub end_height: u64,
+    /// Stop hash (optional)
+    pub stop_hash: Option<Hash256>,
+}
+
+/// Block headers response message
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HeadersMessage {
+    /// Number of headers
+    pub count: u32,
+    /// Block headers
+    pub headers: Vec<BlockHeaderInfo>,
+}
+
+/// Block header information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BlockHeaderInfo {
+    /// Block height
+    pub height: u64,
+    /// Block hash
+    pub hash: Hash256,
+    /// Previous block hash
+    pub prev_hash: Hash256,
+    /// Merkle root
+    pub merkle_root: Hash256,
+    /// Timestamp
+    pub timestamp: u64,
+    /// Difficulty target
+    pub difficulty: u32,
+    /// Nonce
+    pub nonce: u32,
+}
+
+/// Not found message (block or transaction not found)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotFoundMessage {
+    /// Type of item not found
+    pub item_type: NotFoundType,
+    /// Identifier (height for blocks, hash for transactions)
+    pub identifier: Vec<u8>,
+}
+
+/// Not found item type
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum NotFoundType {
+    /// Block not found
+    Block,
+    /// Transaction not found
+    Transaction,
+    /// Block header not found
+    Header,
+}
+
+impl Message {
+    /// Create a GetBlockchainHeight message
+    pub fn get_blockchain_height() -> Self {
+        Self {
+            message_type: MessageType::GetBlockchainHeight,
+            payload: MessagePayload::GetBlockchainHeight,
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            checksum: 0,
+        }
+    }
+
+    /// Create a BlockchainHeight message
+    pub fn blockchain_height(height: u64, best_block_hash: Hash256, total_work: u64) -> Self {
+        Self {
+            message_type: MessageType::BlockchainHeight,
+            payload: MessagePayload::BlockchainHeight(BlockchainHeightMessage {
+                height,
+                best_block_hash,
+                total_work,
+            }),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            checksum: 0,
+        }
+    }
+
+    /// Create a GetBlockByHeight message
+    pub fn get_block_by_height(height: u64) -> Self {
+        Self {
+            message_type: MessageType::GetBlockByHeight,
+            payload: MessagePayload::GetBlockByHeight(GetBlockByHeightMessage { height }),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            checksum: 0,
+        }
+    }
+
+    /// Create a BlockData message
+    pub fn block_data(height: u64, block_hash: Hash256, block_data: Vec<u8>) -> Self {
+        Self {
+            message_type: MessageType::BlockData,
+            payload: MessagePayload::BlockData(BlockDataMessage {
+                height,
+                block_hash,
+                block_data,
+            }),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            checksum: 0,
+        }
+    }
+
+    /// Create a GetHeaders message
+    pub fn get_headers(version: u32, start_height: u64, end_height: u64, stop_hash: Option<Hash256>) -> Self {
+        Self {
+            message_type: MessageType::GetHeaders,
+            payload: MessagePayload::GetHeaders(GetHeadersMessage {
+                version,
+                start_height,
+                end_height,
+                stop_hash,
+            }),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            checksum: 0,
+        }
+    }
+
+    /// Create a Headers message
+    pub fn headers(headers: Vec<BlockHeaderInfo>) -> Self {
+        Self {
+            message_type: MessageType::Headers,
+            payload: MessagePayload::Headers(HeadersMessage {
+                count: headers.len() as u32,
+                headers,
+            }),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            checksum: 0,
+        }
+    }
+
+    /// Create a NotFound message
+    pub fn not_found(item_type: NotFoundType, identifier: Vec<u8>) -> Self {
+        Self {
+            message_type: MessageType::NotFound,
+            payload: MessagePayload::NotFound(NotFoundMessage {
+                item_type,
+                identifier,
+            }),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            checksum: 0,
+        }
+    }
 }
 
 #[cfg(test)]

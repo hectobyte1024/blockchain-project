@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Hub - Edunet</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="/static/js/shared.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Edunet</span>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/marketplace" class="nav-link">
+                        <i class="fas fa-store"></i>
+                        <span>Marketplace</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/loans" class="nav-link">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <span>Loans</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/nfts" class="nav-link">
+                        <i class="fas fa-palette"></i>
+                        <span>NFTs</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/invest" class="nav-link">
+                        <i class="fas fa-rocket"></i>
+                        <span>Invest</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/wallet" class="nav-link">
+                        <i class="fas fa-wallet"></i>
+                        <span>Wallet</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="sidebar-user-name">Loading...</div>
+                        <div class="user-university" id="sidebar-user-university">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header header-gradient">
+                <div class="header-left">
+                    <h1>Investment System</h1>
+                    <p>Investment infrastructure for project funding on the Edunet blockchain</p>
+                </div>
+                <div class="header-right">
+                    <div class="wallet-info">
+                        <i class="fas fa-wallet"></i>
+                        <span class="balance" id="wallet-balance">Loading...</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Development Status -->
+            <div class="development-status">
+                <div class="status-card">
+                    <div class="status-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="status-content">
+                        <h2>Investment System in Development</h2>
+                        <p>The investment infrastructure is being built to enable crowdfunding on the Edunet blockchain.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investment Development Roadmap -->
+            <div class="investment-roadmap">
+                <h2>Investment Platform Roadmap</h2>
+                <div class="roadmap-grid">
+                    <div class="roadmap-item">
+                        <div class="roadmap-status completed">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="roadmap-content">
+                            <h3>Blockchain Foundation</h3>
+                            <p>Core blockchain infrastructure with transaction support</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-status in-progress">
+                            <i class="fas fa-cog fa-spin"></i>
+                        </div>
+                        <div class="roadmap-content">
+                            <h3>Smart Contract System</h3>
+                            <p>Smart contracts for automated funding and escrow</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-status planned">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="roadmap-content">
+                            <h3>Crowdfunding Contracts</h3>
+                            <p>Time-locked funding with milestone-based releases</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-status planned">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="roadmap-content">
+                            <h3>Project Management</h3>
+                            <p>Project submission, validation, and tracking system</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-status planned">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="roadmap-content">
+                            <h3>Investor Interface</h3>
+                            <p>Portfolio management and returns tracking</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-status planned">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="roadmap-content">
+                            <h3>Governance System</h3>
+                            <p>Decentralized project approval and dispute resolution</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Blockchain Features -->
+            <div class="current-features">
+                <h2>Available Now</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-exchange-alt"></i>
+                        <h3>Direct Transfers</h3>
+                        <p>Send EDU tokens directly between wallet addresses for simple funding</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Secure Wallets</h3>
+                        <p>Cryptographically secure wallet system with private key management</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <i class="fas fa-history"></i>
+                        <h3>Transaction History</h3>
+                        <p>Complete transparent record of all transactions on the blockchain</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <i class="fas fa-network-wired"></i>
+                        <h3>Decentralized Network</h3>
+                        <p>Distributed blockchain network ensuring no single point of failure</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Future Investment Categories -->
+            <div class="future-categories">
+                <h2>Planned Investment Categories</h2>
+                <div class="categories-preview">
+                    <div class="category-preview">
+                        <i class="fas fa-microscope"></i>
+                        <h3>Research Projects</h3>
+                        <p>Fund academic research and development initiatives</p>
+                    </div>
+                    
+                    <div class="category-preview">
+                        <i class="fas fa-rocket"></i>
+                        <h3>Startup Ventures</h3>
+                        <p>Support student-led startup companies and innovations</p>
+                    </div>
+                    
+                    <div class="category-preview">
+                        <i class="fas fa-graduation-cap"></i>
+                        <h3>Thesis Projects</h3>
+                        <p>Enable crowdfunding for thesis research and equipment</p>
+                    </div>
+                    
+                    <div class="category-preview">
+                        <i class="fas fa-code"></i>
+                        <h3>Open Source</h3>
+                        <p>Fund development of educational open source software</p>
+                    </div>
+                </div>
+                                </div>
+                            </div>
+                            <div class="investment-info">
+                                <div class="min-investment">Min: 50 EDU</div>
+                                <div class="expected-return">Expected ROI: 150%</div>
+                            </div>
+                            <button class="btn-primary invest-btn">Invest Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investment System Status -->
+            <div class="projects-section">
+                <h2>Investment System Architecture</h2>
+                <div class="system-overview">
+                    <p>The investment platform architecture combines smart contracts, decentralized governance, and automated escrow to enable trustless crowdfunding on the Edunet blockchain.</p>
+                    
+                    <div class="architecture-grid">
+                        <div class="arch-component">
+                            <i class="fas fa-file-contract"></i>
+                            <h3>Smart Contracts</h3>
+                            <p>Automated funding, milestone tracking, and fund release mechanisms</p>
+                        </div>
+                        
+                        <div class="arch-component">
+                            <i class="fas fa-shield-alt"></i>
+                            <h3>Escrow System</h3>
+                            <p>Secure fund holding until project milestones are met</p>
+                        </div>
+                        
+                        <div class="arch-component">
+                            <i class="fas fa-users-cog"></i>
+                            <h3>Governance</h3>
+                            <p>Community-driven project approval and dispute resolution</p>
+                        </div>
+                        
+                        <div class="arch-component">
+                            <i class="fas fa-chart-line"></i>
+                            <h3>Analytics</h3>
+                            <p>Real-time tracking of funding progress and project metrics</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investment System Status -->
+            <div class="investment-status-section">
+                <h2>Direct Investment System</h2>
+                <div class="status-overview">
+                    <div class="status-message">
+                        <i class="fas fa-info-circle"></i>
+                        <div class="message-content">
+                            <h3>Direct Investment via EDU Transfers</h3>
+                            <p>You can directly invest in projects by sending EDU tokens to project wallet addresses. All transactions are recorded on the blockchain with full transparency. Advanced crowdfunding features (milestones, refunds, voting) are in development.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="current-wallet-status">
+                        <h3>Your Investment Wallet</h3>
+                        <div class="wallet-details">
+                            <div class="wallet-item">
+                                <span class="label">Available Balance:</span>
+                                <span class="value" id="current-balance">Loading...</span>
+                            </div>
+                            <div class="wallet-item">
+                                <span class="label">Your Address:</span>
+                                <span class="value" id="current-address">Loading...</span>
+                            </div>
+                            <div class="wallet-item">
+                                <span class="label">Investment Method:</span>
+                                <span class="value">Direct blockchain transfers ✅</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="showQuickInvestModal()" style="margin-top: 1rem;">
+                            <i class="fas fa-hand-holding-usd"></i> Quick Invest
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Invest Modal -->
+    <div id="quick-invest-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Quick Investment</h2>
+                <button class="modal-close" onclick="closeQuickInvestModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Project Wallet Address</label>
+                    <input type="text" id="invest-address" placeholder="edu1q..." required>
+                </div>
+                <div class="form-group">
+                    <label>Investment Amount (EDU)</label>
+                    <input type="number" id="invest-amount" step="0.01" min="0.01" placeholder="100.00" required>
+                </div>
+                <div class="form-group">
+                    <label>Investment Note (optional)</label>
+                    <textarea id="invest-note" rows="3" placeholder="e.g., Investment for renewable energy project"></textarea>
+                </div>
+                <div class="info-box" style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-left: 4px solid #0ea5e9; border-radius: 4px;">
+                    <p style="margin: 0; color: #0c4a6e;">
+                        <strong>Note:</strong> This investment will be sent as a direct EDU transfer on the blockchain. Make sure to verify the project wallet address before investing.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeQuickInvestModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="processInvestment()">
+                    <i class="fas fa-paper-plane"></i> Send Investment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Project Modal -->
+    <div id="create-project-modal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h2>Create Investment Project</h2>
+                <button class="modal-close" onclick="closeCreateProjectModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="create-project-form" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="project-title">Project Title *</label>
+                        <input type="text" id="project-title" name="title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="project-type">Project Type *</label>
+                        <select id="project-type" name="project_type" required>
+                            <option value="">Select Type</option>
+                            <option value="research">Research Project</option>
+                            <option value="startup">Startup</option>
+                            <option value="thesis">Thesis Project</option>
+                            <option value="hackathon">Hackathon</option>
+                            <option value="patent">Patent Application</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="project-description">Project Description *</label>
+                    <textarea id="project-description" name="description" rows="4" required></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="funding-goal">Funding Goal (EDU) *</label>
+                        <input type="number" id="funding-goal" name="funding_goal" min="100" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="project-deadline">Campaign Deadline *</label>
+                        <input type="date" id="project-deadline" name="deadline" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="project-documents">Project Documents</label>
+                    <input type="file" id="project-documents" name="documents" multiple>
+                    <small>Upload project plans, research proposals, prototypes, etc.</small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeCreateProjectModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showQuickInvestModal() {
+            document.getElementById('quick-invest-modal').classList.add('show');
+        }
+        
+        function closeQuickInvestModal() {
+            document.getElementById('quick-invest-modal').classList.remove('show');
+        }
+        
+        async function processInvestment() {
+            const address = document.getElementById('invest-address').value.trim();
+            const amount = parseFloat(document.getElementById('invest-amount').value);
+            const note = document.getElementById('invest-note').value.trim();
+            
+            if (!address || !amount || amount <= 0) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            if (!address.startsWith('edu1q')) {
+                alert('Invalid wallet address. Address must start with "edu1q"');
+                return;
+            }
+            
+            if (confirm(`Confirm investment of ${amount} EDU to ${address}?`)) {
+                try {
+                    const response = await fetch('/api/blockchain/send', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('session_token')}`
+                        },
+                        body: JSON.stringify({
+                            recipient: address,
+                            amount: amount,
+                            message: note || 'Investment transaction'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        alert(`✅ Investment successful!\n\nTransaction Hash: ${data.transaction_hash}\nAmount: ${amount} EDU\n\nYour investment has been recorded on the blockchain.`);
+                        closeQuickInvestModal();
+                        // Clear form
+                        document.getElementById('invest-address').value = '';
+                        document.getElementById('invest-amount').value = '';
+                        document.getElementById('invest-note').value = '';
+                    } else {
+                        alert('❌ Investment failed: ' + (data.message || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Investment error:', error);
+                    alert('❌ Failed to process investment. Please try again.');
+                }
+            }
+        }
+        
+        function closeCreateProjectModal() {
+            document.getElementById('create-project-modal').classList.remove('show');
+        }
+        
+        // Category tab switching
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const category = tab.dataset.category;
+                filterProjectsByCategory(category);
+            });
+        });
+        
+        function filterProjectsByCategory(category) {
+            const projectCards = document.querySelectorAll('.project-card');
+            projectCards.forEach(card => {
+                if (category === 'all') {
+                    card.style.display = 'block';
+                } else {
+                    const cardCategory = card.querySelector('.project-badge').textContent.toLowerCase();
+                    card.style.display = cardCategory === category ? 'block' : 'none';
+                }
+            });
+        }
+        
+        // Create project button
+        document.querySelector('.header-right .btn-primary').addEventListener('click', () => {
+            document.getElementById('create-project-modal').classList.add('show');
+        });
+        
+        // Invest buttons - open quick invest modal
+        document.querySelectorAll('.invest-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                showQuickInvestModal();
+            });
+        });
+
+        // Initialize global EdunetApp
+        if (typeof EdunetApp !== 'undefined') {
+            window.edunetApp = new EdunetApp();
+            console.log('EdunetApp initialized successfully');
+        } else {
+            console.error('EdunetApp class not found - shared.js may not have loaded');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+[package]
+name = "blockchain-node"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+# Blockchain core components (Pure Rust)
+blockchain-network = { path = "../rust-system/blockchain-network" }
+blockchain-rpc = { path = "../rust-system/blockchain-rpc" }
+blockchain-core = { path = "../rust-system/blockchain-core" }
+
+# RPC
+jsonrpc-core = "18.0"
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+anyhow = "1.0"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Configuration
+toml = "0.8"
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# Additional for mining
+sha2 = "0.10"
+chrono = "0.4"
+hex = "0.4"

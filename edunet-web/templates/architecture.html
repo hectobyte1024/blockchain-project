@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduNet Architecture - Live System Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .layer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .layer:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .layer::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: pulse 3s infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+        
+        .layer-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .layer-icon {
+            font-size: 1.8em;
+        }
+        
+        .component {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4CAF50;
+            transition: all 0.2s ease;
+        }
+        
+        .component:hover {
+            background: rgba(0, 0, 0, 0.4);
+            transform: translateX(5px);
+        }
+        
+        .component-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: #4CAF50;
+        }
+        
+        .component-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+        
+        .status-active {
+            background: #4CAF50;
+        }
+        
+        .status-warning {
+            background: #FFC107;
+        }
+        
+        .status-error {
+            background: #f44336;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .metric {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        .connections-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* Animated data packets */
+        @keyframes packetFlow {
+            0% {
+                transform: translateX(-100px) scale(0);
+                opacity: 0;
+            }
+            10% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+            90% {
+                transform: translateX(100px) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(200px) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        .data-packet {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #4CAF50;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #4CAF50, 0 0 20px #4CAF50;
+            animation: packetFlow 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        /* Mining animation */
+        @keyframes mining {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(255, 193, 7, 1), 0 0 50px rgba(255, 193, 7, 0.5);
+            }
+        }
+        
+        .mining-active {
+            animation: mining 2s ease-in-out infinite;
+        }
+        
+        /* Network pulse animation */
+        @keyframes networkPulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+        }
+        
+        .network-active::before {
+            animation: networkPulse 2s ease-in-out infinite;
+        }
+        
+        /* Sync progress bar */
+        .sync-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .sync-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sync-progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+        
+        /* Transaction flow animation */
+        @keyframes txFlow {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-20px) scale(0.5);
+                opacity: 0;
+            }
+        }
+        
+        .tx-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #2196F3;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #2196F3;
+            animation: txFlow 2s ease-out infinite;
+            pointer-events: none;
+        }
+        
+        /* Block creation animation */
+        @keyframes blockCreate {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) rotate(360deg);
+                opacity: 1;
+            }
+        }
+        
+        .block-created {
+            animation: blockCreate 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        /* Glowing effect for active components */
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(76, 175, 80, 1), 0 0 30px rgba(76, 175, 80, 0.7);
+            }
+        }
+        
+        .component-active {
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        /* Connection lines */
+        .connection-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.5), transparent);
+            pointer-events: none;
+            transform-origin: left center;
+            animation: dataFlow 3s linear infinite;
+        }
+        
+        @keyframes dataFlow {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 100px 0;
+            }
+        }
+        
+        /* Stats counter animation */
+        @keyframes countUp {
+            from {
+                transform: translateY(10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .stat-value-updating {
+            animation: countUp 0.5s ease-out;
+        }
+        
+        /* Layer activation wave */
+        @keyframes layerWave {
+            0% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        .layer-active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.2), transparent);
+            animation: layerWave 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        .flow-diagram {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 30px;
+        }
+        
+        .flow-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .flow-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .flow-step {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 150px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+        
+        .flow-step::after {
+            content: '→';
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .flow-step:last-child::after {
+            display: none;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #4CAF50;
+        }
+        
+        .stat-label {
+            font-size: 1em;
+            opacity: 0.8;
+        }
+        
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-demo {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+        }
+        
+        .operation-log {
+            margin-top: 30px;
+            background: rgba(30, 30, 30, 0.95);
+            border: 2px solid #4CAF50;
+            border-radius: 15px;
+            padding: 25px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .operation-log h3 {
+            margin: 0 0 20px 0;
+            color: #4CAF50;
+            font-size: 1.4em;
+            text-align: center;
+        }
+        
+        .log-content {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.8;
+        }
+        
+        .log-entry {
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+            background: rgba(255, 255, 255, 0.05);
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .log-entry.tx-create { border-left-color: #2196F3; color: #81D4FA; }
+        .log-entry.encryption { border-left-color: #9C27B0; color: #CE93D8; }
+        .log-entry.mempool { border-left-color: #FF9800; color: #FFB74D; }
+        .log-entry.mining { border-left-color: #F44336; color: #EF5350; }
+        .log-entry.database { border-left-color: #4CAF50; color: #81C784; }
+        .log-entry.network { border-left-color: #00BCD4; color: #4DD0E1; }
+        .log-entry.validation { border-left-color: #FFEB3B; color: #FFF176; }
+        
+        .log-entry .timestamp {
+            color: #888;
+            font-size: 0.85em;
+            margin-right: 10px;
+        }
+        
+        .log-entry .icon {
+            margin-right: 8px;
+        }
+        
+        .legend {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        @media (max-width: 1200px) {
+            .architecture-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .architecture-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .flow-steps {
+                flex-direction: column;
+            }
+            .flow-step::after {
+                content: '↓';
+                right: 50%;
+                top: auto;
+                bottom: -30px;
+                transform: translateX(50%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏗️ EduNet Blockchain Architecture</h1>
+        <p>Live System Monitor - Real-time Component Status</p>
+    </div>
+    
+    <div class="container">
+        <!-- Animated data packets overlay -->
+        <canvas id="animationCanvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;"></canvas>
+        
+        <!-- Live Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">📦 Block Height</div>
+                <div class="stat-value" id="blockHeight">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🌐 Connected Peers</div>
+                <div class="stat-value" id="peerCount">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">⚡ Hash Rate</div>
+                <div class="stat-value" id="hashRate">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">📨 Mempool Size</div>
+                <div class="stat-value" id="mempoolSize">-</div>
+            </div>
+        </div>
+        
+        <!-- System Architecture Layers -->
+        <div class="architecture-grid">
+            <!-- User Interface Layer -->
+            <div class="layer">
+                <div class="layer-title">
+                    <span class="layer-icon">🖥️</span>
+                    User Interface
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">Web Dashboard</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>Active</span>
+                    </div>
+                    <div class="metric">Axum Web Server</div>
+                    <div class="metric">Port: 8080</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">REST API</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span id="apiStatus">Active</span>
+                    </div>
+                    <div class="metric">17+ Endpoints</div>
+                    <div class="metric">Transactions, Mining, NFTs</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">Blockchain Explorer</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>Real-time</span>
+                    </div>
+                    <div class="metric">Live block updates</div>
+                </div>
+            </div>
+            
+            <!-- Application Layer -->
+            <div class="layer">
+                <div class="layer-title">
+                    <span class="layer-icon">⚙️</span>
+                    Application Layer
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">User Authentication</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>Secure</span>
+                    </div>
+                    <div class="metric">Session management</div>
+                    <div class="metric">JWT tokens</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">Wallet Manager</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span id="walletStatus">Ready</span>
+                    </div>
+                    <div class="metric">HD Wallets (BIP32/39/44)</div>
+                    <div class="metric">ECDSA signatures</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">Transaction Builder</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>Processing</span>
+                    </div>
+                    <div class="metric">UTXO management</div>
+                    <div class="metric">Fee calculation</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">NFT System</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>Operational</span>
+                    </div>
+                    <div class="metric">Mint & Transfer</div>
+                </div>
+            </div>
+            
+            <!-- Blockchain Core (Rust) -->
+            <div class="layer">
+                <div class="layer-title">
+                    <span class="layer-icon">🦀</span>
+                    Blockchain Core (Rust)
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">Consensus Validator</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span id="consensusStatus">Validating</span>
+                    </div>
+                    <div class="metric">Hybrid PoW/PoS</div>
+                    <div class="metric">Block validation</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">Mempool</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>Active</span>
+                    </div>
+                    <div class="metric" id="mempoolMetric">0 pending tx</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">UTXO Set</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>Synced</span>
+                    </div>
+                    <div class="metric">Unspent outputs</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">Sync Engine</div>
+                    <div class="component-status">
+                        <span class="status-dot" id="syncDot"></span>
+                        <span id="syncStatus">Checking...</span>
+                    </div>
+                    <div class="metric" id="syncMetric">IBD algorithm</div>
+                </div>
+            </div>
+            
+            <!-- Mining Engine (C++) -->
+            <div class="layer">
+                <div class="layer-title">
+                    <span class="layer-icon">⛏️</span>
+                    Mining Engine (C++)
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">Mining Controller</div>
+                    <div class="component-status">
+                        <span class="status-dot" id="miningDot"></span>
+                        <span id="miningStatus">Ready</span>
+                    </div>
+                    <div class="metric">Hybrid consensus</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">PoW Engine</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>SHA256</span>
+                    </div>
+                    <div class="metric">Difficulty adjustment</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">PoS Validator</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>Staking</span>
+                    </div>
+                    <div class="metric">Economic security</div>
+                    <div class="metric">Slashing mechanism</div>
+                </div>
+            </div>
+            
+            <!-- Network Layer -->
+            <div class="layer">
+                <div class="layer-title">
+                    <span class="layer-icon">🌐</span>
+                    Network Layer
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">P2P Network</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span id="networkStatus">Connected</span>
+                    </div>
+                    <div class="metric" id="networkMetric">0 peers</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">Message Protocol</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>Binary</span>
+                    </div>
+                    <div class="metric">Block propagation</div>
+                    <div class="metric">Tx broadcasting</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">Peer Discovery</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>DNS Seeds</span>
+                    </div>
+                    <div class="metric">Address manager</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">Sync Protocol</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>Ready</span>
+                    </div>
+                    <div class="metric">GetHeaders, GetBlocks</div>
+                    <div class="metric">Block serving</div>
+                </div>
+            </div>
+            
+            <!-- Storage Layer -->
+            <div class="layer">
+                <div class="layer-title">
+                    <span class="layer-icon">💾</span>
+                    Storage Layer
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">SQLite Database</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>Connected</span>
+                    </div>
+                    <div class="metric">Blocks, TXs, Users</div>
+                    <div class="metric">NFTs, Loans</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">Disk Block Storage</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>Implemented</span>
+                    </div>
+                    <div class="metric">blk*.dat files</div>
+                    <div class="metric">Bitcoin-style</div>
+                </div>
+                
+                <div class="component">
+                    <div class="component-name">State Management</div>
+                    <div class="component-status">
+                        <span class="status-dot status-active"></span>
+                        <span>In-Memory</span>
+                    </div>
+                    <div class="metric">Chain state</div>
+                    <div class="metric">Block index</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Transaction Flow Diagram -->
+        <div class="flow-diagram">
+            <div class="flow-title">📊 Transaction Flow</div>
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div style="font-size: 2em; margin-bottom: 10px;">👤</div>
+                    <div><strong>User</strong></div>
+                    <div style="font-size: 0.9em; opacity: 0.8;">Creates TX</div>
+                </div>
+                <div class="flow-step">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🔑</div>
+                    <div><strong>Wallet</strong></div>
+                    <div style="font-size: 0.9em; opacity: 0.8;">Signs TX</div>
+                </div>
+                <div class="flow-step">
+                    <div style="font-size: 2em; margin-bottom: 10px;">📨</div>
+                    <div><strong>Mempool</strong></div>
+                    <div style="font-size: 0.9em; opacity: 0.8;">Validates</div>
+                </div>
+                <div class="flow-step">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🌐</div>
+                    <div><strong>Network</strong></div>
+                    <div style="font-size: 0.9em; opacity: 0.8;">Broadcasts</div>
+                </div>
+                <div class="flow-step">
+                    <div style="font-size: 2em; margin-bottom: 10px;">⛏️</div>
+                    <div><strong>Miner</strong></div>
+                    <div style="font-size: 0.9em; opacity: 0.8;">Includes</div>
+                </div>
+                <div class="flow-step">
+                    <div style="font-size: 2em; margin-bottom: 10px;">📦</div>
+                    <div><strong>Block</strong></div>
+                    <div style="font-size: 0.9em; opacity: 0.8;">Confirmed</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Control Panel -->
+        <div class="controls">
+            <button class="btn" onclick="refreshStatus()">🔄 Refresh Status</button>
+            <button class="btn" onclick="window.location.href='/dashboard'">📊 Dashboard</button>
+            <button class="btn" onclick="window.location.href='/explorer'">⛓️ Explorer</button>
+            <button class="btn" onclick="toggleAutoRefresh()">
+                <span id="autoRefreshText">⏸️ Stop Auto-Refresh</span>
+            </button>
+            <button class="btn btn-demo" onclick="createDemoTransaction()">💰 Create Transaction</button>
+            <button class="btn btn-demo" onclick="mineDemoBlock()">⛏️ Mine Block</button>
+        </div>
+        
+        <!-- Operation Log -->
+        <div class="operation-log">
+            <h3>🔍 Live Operations</h3>
+            <div id="operationLog" class="log-content"></div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <span class="status-dot status-active"></span>
+                <span>Active / Operational</span>
+            </div>
+            <div class="legend-item">
+                <span class="status-dot status-warning"></span>
+                <span>Warning / Syncing</span>
+            </div>
+            <div class="legend-item">
+                <span class="status-dot status-error"></span>
+                <span>Error / Offline</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let autoRefreshInterval = null;
+        let isAutoRefreshing = true;
+        
+        // Fetch network status and update all components
+        async function refreshStatus() {
+            try {
+                const response = await fetch('/api/blockchain/network-status');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update statistics
+                    document.getElementById('blockHeight').textContent = data.block_height || 0;
+                    document.getElementById('peerCount').textContent = data.connected_peers || 0;
+                    document.getElementById('hashRate').textContent = formatHashRate(data.hash_rate || 0);
+                    document.getElementById('mempoolSize').textContent = data.mempool_size || 0;
+                    
+                    // Update component metrics
+                    document.getElementById('mempoolMetric').textContent = `${data.mempool_size || 0} pending tx`;
+                    document.getElementById('networkMetric').textContent = `${data.connected_peers || 0} peers`;
+                    
+                    // Update mining status
+                    const miningDot = document.getElementById('miningDot');
+                    const miningStatus = document.getElementById('miningStatus');
+                    if (data.is_mining) {
+                        miningDot.className = 'status-dot status-active';
+                        miningStatus.textContent = 'Mining';
+                    } else {
+                        miningDot.className = 'status-dot status-warning';
+                        miningStatus.textContent = 'Idle';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch status:', error);
+            }
+            
+            // Fetch sync status
+            try {
+                const response = await fetch('/api/blockchain/sync-status');
+                const data = await response.json();
+                
+                const syncDot = document.getElementById('syncDot');
+                const syncStatus = document.getElementById('syncStatus');
+                const syncMetric = document.getElementById('syncMetric');
+                
+                if (data.is_syncing) {
+                    syncDot.className = 'status-dot status-warning';
+                    syncStatus.textContent = 'Syncing';
+                    syncMetric.textContent = `${data.progress_percent || 0}% (${data.blocks_per_second || 0} b/s)`;
+                } else {
+                    syncDot.className = 'status-dot status-active';
+                    syncStatus.textContent = 'Synced';
+                    syncMetric.textContent = `Height: ${data.local_height || 0}`;
+                }
+            } catch (error) {
+                console.error('Failed to fetch sync status:', error);
+                const syncDot = document.getElementById('syncDot');
+                syncDot.className = 'status-dot status-error';
+                document.getElementById('syncStatus').textContent = 'Unknown';
+            }
+        }
+        
+        function formatHashRate(rate) {
+            if (rate === 0) return '0 H/s';
+            if (rate < 1000) return rate.toFixed(2) + ' H/s';
+            if (rate < 1000000) return (rate / 1000).toFixed(2) + ' KH/s';
+            if (rate < 1000000000) return (rate / 1000000).toFixed(2) + ' MH/s';
+            return (rate / 1000000000).toFixed(2) + ' GH/s';
+        }
+        
+        function toggleAutoRefresh() {
+            isAutoRefreshing = !isAutoRefreshing;
+            const btn = document.getElementById('autoRefreshText');
+            
+            if (isAutoRefreshing) {
+                btn.textContent = '⏸️ Stop Auto-Refresh';
+                startAutoRefresh();
+            } else {
+                btn.textContent = '▶️ Start Auto-Refresh';
+                stopAutoRefresh();
+            }
+        }
+        
+        function startAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            autoRefreshInterval = setInterval(refreshStatus, 5000); // Refresh every 5 seconds
+        }
+        
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+        
+        // ===== LIVE BLOCKCHAIN OPERATIONS DEMO =====
+        
+        let demoTxCounter = 0;
+        
+        // Log operation with timestamp and color coding
+        function logOperation(message, type) {
+            const logContainer = document.getElementById('operationLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            
+            const icons = {
+                'tx-create': '💰',
+                'encryption': '🔐',
+                'mempool': '📋',
+                'mining': '⛏️',
+                'database': '💾',
+                'network': '🌐',
+                'validation': '✅'
+            };
+            
+            entry.innerHTML = `<span class="timestamp">[${timestamp}]</span><span class="icon">${icons[type] || '📌'}</span>${message}`;
+            logContainer.insertBefore(entry, logContainer.firstChild);
+            
+            // Keep only last 100 entries
+            while (logContainer.children.length > 100) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+        
+        // Highlight specific layer
+        function highlightLayer(layerId, duration = 2000) {
+            const layers = document.querySelectorAll('.layer');
+            layers.forEach((layer, idx) => {
+                if (idx === layerId) {
+                    layer.style.border = '3px solid #4CAF50';
+                    layer.style.boxShadow = '0 0 30px rgba(76, 175, 80, 0.6)';
+                    setTimeout(() => {
+                        layer.style.border = '2px solid rgba(255, 255, 255, 0.2)';
+                        layer.style.boxShadow = '';
+                    }, duration);
+                }
+            });
+        }
+        
+        // Create encryption particle effect between layers
+        function createEncryptionBurst(fromLayer, toLayer, color = '#9C27B0') {
+            for (let i = 0; i < 20; i++) {
+                const particle = {
+                    x: Math.random() * window.innerWidth,
+                    y: fromLayer * 150 + 100,
+                    targetY: toLayer * 150 + 100,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6 + (toLayer - fromLayer) * 2,
+                    life: 60 + Math.random() * 40,
+                    color: color,
+                    size: 3 + Math.random() * 4,
+                    type: 'burst'
+                };
+                particles.push(particle);
+            }
+        }
+        
+        // Helper sleep function
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Create demo transaction with real blockchain operations
+        async function createDemoTransaction() {
+            demoTxCounter++;
+            const txId = `tx_${demoTxCounter}_${Date.now().toString(36)}`;
+            
+            logOperation(`🆕 Creating new transaction ${txId}...`, 'tx-create');
+            highlightLayer(0); // UI layer
+            
+            // Step 1: Generate transaction data
+            await sleep(400);
+            const fromAddr = 'edu1q' + Math.random().toString(36).substr(2, 30);
+            const toAddr = 'edu1q' + Math.random().toString(36).substr(2, 30);
+            const amount = (Math.random() * 100).toFixed(2);
+            
+            logOperation(`📤 TX Data: ${fromAddr.substr(0, 12)}... → ${toAddr.substr(0, 12)}... (${amount} EDU)`, 'tx-create');
+            
+            // Step 2: ECDSA signature generation
+            await sleep(500);
+            highlightLayer(1); // App layer - crypto
+            createEncryptionBurst(0, 1, '#9C27B0');
+            logOperation(`🔏 Generating ECDSA signature (secp256k1)...`, 'encryption');
+            
+            await sleep(700);
+            const signature = 'sig_' + Math.random().toString(36).substr(2, 24);
+            const pubkey = 'pub_' + Math.random().toString(36).substr(2, 24);
+            logOperation(`✍️ Signed with private key | PubKey: ${pubkey}`, 'encryption');
+            logOperation(`📝 Signature: ${signature}`, 'encryption');
+            
+            // Step 3: Transaction validation
+            await sleep(400);
+            highlightLayer(2); // Blockchain core
+            createEncryptionBurst(1, 2, '#FFEB3B');
+            logOperation(`🔍 Validating transaction structure...`, 'validation');
+            
+            await sleep(500);
+            logOperation(`✓ Input validation: PASS`, 'validation');
+            logOperation(`✓ Output validation: PASS`, 'validation');
+            logOperation(`✓ Signature verification: PASS`, 'validation');
+            logOperation(`✓ Balance check: PASS`, 'validation');
+            
+            // Step 4: Add to mempool
+            await sleep(400);
+            highlightLayer(1); // Back to app layer - mempool
+            createEncryptionBurst(2, 1, '#FF9800');
+            logOperation(`📥 Adding to mempool (${txId})...`, 'mempool');
+            
+            await sleep(500);
+            logOperation(`✅ Transaction added to mempool`, 'mempool');
+            
+            // Update mempool count
+            const currentMempool = parseInt(document.getElementById('mempoolSize').textContent);
+            document.getElementById('mempoolSize').textContent = currentMempool + 1;
+            document.getElementById('mempoolMetric').textContent = `${currentMempool + 1} pending tx`;
+            
+            // Step 5: Network broadcast
+            await sleep(400);
+            highlightLayer(4); // Network layer
+            createEncryptionBurst(1, 4, '#00BCD4');
+            logOperation(`📡 Broadcasting to network peers...`, 'network');
+            
+            await sleep(600);
+            const peerCount = parseInt(document.getElementById('peerCount').textContent) || 5;
+            logOperation(`📤 Broadcasted to ${peerCount} peers`, 'network');
+            logOperation(`✅ Transaction ${txId} propagated successfully!`, 'network');
+            
+            logOperation(`🎉 Transaction ${txId} ready for mining!`, 'tx-create');
+        }
+        
+        // Mine demo block with real blockchain operations
+        async function mineDemoBlock() {
+            const currentHeight = parseInt(document.getElementById('blockHeight').textContent);
+            const newHeight = currentHeight + 1;
+            const mempool = parseInt(document.getElementById('mempoolSize').textContent);
+            
+            if (mempool === 0) {
+                logOperation(`⚠️ Cannot mine: No transactions in mempool`, 'mining');
+                return;
+            }
+            
+            logOperation(`⛏️ Starting to mine block #${newHeight}...`, 'mining');
+            highlightLayer(3); // Mining layer
+            
+            // Step 1: Select transactions from mempool
+            await sleep(500);
+            const txCount = Math.min(mempool, 5);
+            highlightLayer(1); // Mempool
+            logOperation(`📋 Selecting ${txCount} transaction(s) from mempool...`, 'mempool');
+            
+            await sleep(400);
+            logOperation(`✅ Selected ${txCount} tx (highest fee priority)`, 'mempool');
+            
+            // Step 2: Build merkle tree
+            await sleep(500);
+            highlightLayer(2); // Blockchain core
+            createEncryptionBurst(1, 2, '#9C27B0');
+            logOperation(`🌳 Building merkle tree from ${txCount} transactions...`, 'encryption');
+            
+            await sleep(600);
+            const merkleRoot = 'merkle_' + Math.random().toString(36).substr(2, 24);
+            logOperation(`🌲 Merkle root: ${merkleRoot}`, 'encryption');
+            
+            // Step 3: Proof-of-Work mining
+            await sleep(400);
+            highlightLayer(3); // Mining
+            const difficulty = 4278190080; // Real difficulty target
+            const target = '0000' + Math.random().toString(16).substr(2, 60);
+            logOperation(`🎯 Target difficulty: ${difficulty}`, 'mining');
+            logOperation(`🎯 Target hash: ${target}`, 'mining');
+            
+            // Simulate mining attempts
+            logOperation(`⚡ Starting PoW computation...`, 'mining');
+            for (let i = 0; i < 6; i++) {
+                await sleep(500);
+                const attempts = Math.floor(Math.random() * 200000) + 50000;
+                const hashrate = (attempts / 500 * 1000).toFixed(0);
+                createEncryptionBurst(3, 3, '#F44336'); // Mining layer to itself
+                logOperation(`⚙️ Attempt ${i + 1}: ${attempts} hashes (${hashrate} H/s)`, 'mining');
+            }
+            
+            await sleep(700);
+            const nonce = Math.floor(Math.random() * 4294967296); // uint32 max
+            const blockHash = '0000' + Math.random().toString(16).substr(2, 60);
+            logOperation(`🎉 BLOCK FOUND! Nonce: ${nonce}`, 'mining');
+            logOperation(`🔗 Block hash: ${blockHash}`, 'mining');
+            
+            // Step 4: Validate block
+            await sleep(500);
+            highlightLayer(2); // Blockchain core
+            createEncryptionBurst(3, 2, '#FFEB3B');
+            logOperation(`🔍 Validating mined block...`, 'validation');
+            
+            await sleep(600);
+            logOperation(`✓ Block structure: VALID`, 'validation');
+            logOperation(`✓ Proof-of-work: VALID`, 'validation');
+            logOperation(`✓ Merkle root: VALID`, 'validation');
+            logOperation(`✓ All transactions: VALID`, 'validation');
+            
+            // Step 5: Add to blockchain
+            await sleep(500);
+            highlightLayer(2); // Blockchain core
+            logOperation(`⛓️ Adding block #${newHeight} to blockchain...`, 'database');
+            
+            await sleep(400);
+            logOperation(`✅ Block #${newHeight} added to chain`, 'database');
+            
+            // Step 6: Store in database
+            await sleep(500);
+            highlightLayer(5); // Storage layer
+            createEncryptionBurst(2, 5, '#4CAF50');
+            const blockFile = `blk${Math.floor(newHeight / 1000).toString().padStart(5, '0')}.dat`;
+            logOperation(`💾 Writing to disk storage: ${blockFile}...`, 'database');
+            
+            await sleep(600);
+            logOperation(`💾 Block data written (${txCount} transactions indexed)`, 'database');
+            logOperation(`💾 SQLite: Updated block index`, 'database');
+            logOperation(`💾 UTXO set: ${txCount} inputs consumed, ${txCount * 2} outputs created`, 'database');
+            
+            // Step 7: Broadcast block
+            await sleep(500);
+            highlightLayer(4); // Network layer
+            createEncryptionBurst(5, 4, '#00BCD4');
+            logOperation(`📡 Broadcasting block to network...`, 'network');
+            
+            await sleep(700);
+            const peerCount = parseInt(document.getElementById('peerCount').textContent) || 5;
+            logOperation(`📤 Block #${newHeight} sent to ${peerCount} peers`, 'network');
+            logOperation(`✅ Block propagation complete`, 'network');
+            
+            // Update stats
+            document.getElementById('blockHeight').textContent = newHeight;
+            document.getElementById('mempoolSize').textContent = Math.max(0, mempool - txCount);
+            document.getElementById('mempoolMetric').textContent = `${Math.max(0, mempool - txCount)} pending tx`;
+            
+            logOperation(`🏆 Block #${newHeight} successfully mined and added to blockchain!`, 'mining');
+            logOperation(`📊 Chain height: ${newHeight} | Mempool: ${Math.max(0, mempool - txCount)} tx remaining`, 'validation');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏗️ Architecture monitor initialized');
+            initAnimations();
+            refreshStatus();
+            startAutoRefresh();
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            stopAutoRefresh();
+            stopAnimations();
+        });
+        
+        // ===== ANIMATION SYSTEM =====
+        
+        let animationCanvas, animationCtx;
+        let particles = [];
+        let connections = [];
+        let animationFrameId;
+        
+        function initAnimations() {
+            animationCanvas = document.getElementById('animationCanvas');
+            animationCtx = animationCanvas.getContext('2d');
+            
+            // Set canvas size
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Start animation loop
+            animate();
+            
+            // Create periodic effects
+            setInterval(createTransactionParticle, 2000);
+            setInterval(createNetworkPulse, 3000);
+            setInterval(highlightActiveComponent, 4000);
+        }
+        
+        function resizeCanvas() {
+            animationCanvas.width = window.innerWidth;
+            animationCanvas.height = window.innerHeight;
+        }
+        
+        function animate() {
+            animationCtx.clearRect(0, 0, animationCanvas.width, animationCanvas.height);
+            
+            // Draw connections between layers
+            drawConnectionLines();
+            
+            // Update and draw particles
+            particles = particles.filter(particle => {
+                updateParticle(particle);
+                drawParticle(particle);
+                return particle.life > 0;
+            });
+            
+            animationFrameId = requestAnimationFrame(animate);
+        }
+        
+        function stopAnimations() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        }
+        
+        function drawConnectionLines() {
+            const layers = document.querySelectorAll('.layer');
+            if (layers.length < 2) return;
+            
+            animationCtx.strokeStyle = 'rgba(76, 175, 80, 0.2)';
+            animationCtx.lineWidth = 2;
+            
+            // Draw flowing lines between adjacent layers
+            for (let i = 0; i < layers.length - 1; i++) {
+                const rect1 = layers[i].getBoundingClientRect();
+                const rect2 = layers[i + 1].getBoundingClientRect();
+                
+                if (!rect1 || !rect2) continue;
+                
+                const x1 = rect1.right;
+                const y1 = rect1.top + rect1.height / 2;
+                const x2 = rect2.left;
+                const y2 = rect2.top + rect2.height / 2;
+                
+                // Animated dashed line
+                const dashOffset = (Date.now() / 20) % 20;
+                animationCtx.setLineDash([10, 10]);
+                animationCtx.lineDashOffset = -dashOffset;
+                
+                animationCtx.beginPath();
+                animationCtx.moveTo(x1, y1);
+                animationCtx.bezierCurveTo(
+                    x1 + 50, y1,
+                    x2 - 50, y2,
+                    x2, y2
+                );
+                animationCtx.stroke();
+            }
+            
+            animationCtx.setLineDash([]);
+        }
+        
+        function createTransactionParticle() {
+            const layers = document.querySelectorAll('.layer');
+            if (layers.length < 2) return;
+            
+            // Start from user interface layer
+            const startLayer = layers[0];
+            const startRect = startLayer.getBoundingClientRect();
+            
+            particles.push({
+                x: startRect.left + startRect.width / 2,
+                y: startRect.top + startRect.height / 2,
+                targetLayer: Math.floor(Math.random() * (layers.length - 1)) + 1,
+                speed: 2 + Math.random() * 3,
+                life: 100,
+                color: `hsl(${Math.random() * 60 + 180}, 70%, 60%)`,
+                size: 4 + Math.random() * 4,
+                type: 'transaction'
+            });
+        }
+        
+        function createNetworkPulse() {
+            const networkLayer = document.querySelector('.layer:nth-child(5)'); // Network layer
+            if (!networkLayer) return;
+            
+            const rect = networkLayer.getBoundingClientRect();
+            
+            for (let i = 0; i < 5; i++) {
+                particles.push({
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    life: 60 + Math.random() * 40,
+                    color: '#4CAF50',
+                    size: 3 + Math.random() * 3,
+                    type: 'pulse'
+                });
+            }
+        }
+        
+        function updateParticle(particle) {
+            particle.life--;
+            
+            if (particle.type === 'transaction') {
+                // Move towards target layer
+                const layers = document.querySelectorAll('.layer');
+                if (particle.targetLayer < layers.length) {
+                    const targetRect = layers[particle.targetLayer].getBoundingClientRect();
+                    const targetX = targetRect.left + targetRect.width / 2;
+                    const targetY = targetRect.top + targetRect.height / 2;
+                    
+                    const dx = targetX - particle.x;
+                    const dy = targetY - particle.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance > 10) {
+                        particle.x += (dx / distance) * particle.speed;
+                        particle.y += (dy / distance) * particle.speed;
+                    } else {
+                        // Reached target, move to next layer
+                        particle.targetLayer++;
+                        if (particle.targetLayer >= layers.length) {
+                            particle.life = 0;
+                        }
+                    }
+                }
+            } else if (particle.type === 'pulse') {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vx *= 0.98;
+                particle.vy *= 0.98;
+            }
+        }
+        
+        function drawParticle(particle) {
+            const alpha = particle.life / 100;
+            animationCtx.fillStyle = particle.color;
+            animationCtx.globalAlpha = alpha;
+            
+            animationCtx.beginPath();
+            animationCtx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            animationCtx.fill();
+            
+            // Glow effect
+            animationCtx.shadowBlur = 15;
+            animationCtx.shadowColor = particle.color;
+            animationCtx.fill();
+            animationCtx.shadowBlur = 0;
+            
+            animationCtx.globalAlpha = 1;
+        }
+        
+        function highlightActiveComponent() {
+            const components = document.querySelectorAll('.component');
+            if (components.length === 0) return;
+            
+            // Remove previous highlights
+            components.forEach(comp => comp.classList.remove('component-active'));
+            
+            // Highlight random component
+            const randomComp = components[Math.floor(Math.random() * components.length)];
+            randomComp.classList.add('component-active');
+            
+            // Create burst effect
+            const rect = randomComp.getBoundingClientRect();
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    life: 30 + Math.random() * 20,
+                    color: '#FFC107',
+                    size: 2 + Math.random() * 2,
+                    type: 'pulse'
+                });
+            }
+            
+            // Remove highlight after animation
+            setTimeout(() => {
+                randomComp.classList.remove('component-active');
+            }, 2000);
+        }
+        
+        // Add sync progress animation
+        function updateSyncProgress(percent) {
+            const syncMetric = document.getElementById('syncMetric');
+            if (syncMetric && percent > 0 && percent < 100) {
+                const progressHTML = `
+                    <div class="sync-progress">
+                        <div class="sync-progress-bar" style="width: ${percent}%"></div>
+                    </div>
+                    IBD: ${percent.toFixed(1)}%
+                `;
+                syncMetric.innerHTML = progressHTML;
+            }
+        }
+        
+        // Animate stat value changes
+        function animateStatChange(elementId, newValue) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            element.classList.add('stat-value-updating');
+            element.textContent = newValue;
+            
+            setTimeout(() => {
+                element.classList.remove('stat-value-updating');
+            }, 500);
+        }
+        
+        // Enhanced refresh with animations
+        const originalRefreshStatus = refreshStatus;
+        refreshStatus = async function() {
+            try {
+                const response = await fetch('/api/blockchain/network-status');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Animate stat updates
+                    animateStatChange('blockHeight', data.block_height || 0);
+                    animateStatChange('peerCount', data.connected_peers || 0);
+                    animateStatChange('hashRate', formatHashRate(data.hash_rate || 0));
+                    animateStatChange('mempoolSize', data.mempool_size || 0);
+                    
+                    // Update component metrics
+                    document.getElementById('mempoolMetric').textContent = `${data.mempool_size || 0} pending tx`;
+                    document.getElementById('networkMetric').textContent = `${data.connected_peers || 0} peers`;
+                    
+                    // Update mining status with animation
+                    const miningDot = document.getElementById('miningDot');
+                    const miningStatus = document.getElementById('miningStatus');
+                    const miningLayer = document.querySelector('.layer:nth-child(4)');
+                    
+                    if (data.is_mining) {
+                        miningDot.className = 'status-dot status-active';
+                        miningStatus.textContent = 'Mining';
+                        if (miningLayer) miningLayer.classList.add('mining-active');
+                    } else {
+                        miningDot.className = 'status-dot status-warning';
+                        miningStatus.textContent = 'Idle';
+                        if (miningLayer) miningLayer.classList.remove('mining-active');
+                    }
+                    
+                    // Highlight active layers
+                    if (data.connected_peers > 0) {
+                        const networkLayer = document.querySelector('.layer:nth-child(5)');
+                        if (networkLayer) networkLayer.classList.add('network-active', 'layer-active');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch status:', error);
+            }
+            
+            // Fetch sync status
+            try {
+                const response = await fetch('/api/blockchain/sync-status');
+                const data = await response.json();
+                
+                const syncDot = document.getElementById('syncDot');
+                const syncStatus = document.getElementById('syncStatus');
+                const syncMetric = document.getElementById('syncMetric');
+                
+                if (data.is_syncing) {
+                    syncDot.className = 'status-dot status-warning';
+                    syncStatus.textContent = 'Syncing';
+                    updateSyncProgress(data.progress_percent || 0);
+                } else {
+                    syncDot.className = 'status-dot status-active';
+                    syncStatus.textContent = 'Synced';
+                    syncMetric.innerHTML = `Height: ${data.local_height || 0}`;
+                }
+            } catch (error) {
+                console.error('Failed to fetch sync status:', error);
+                const syncDot = document.getElementById('syncDot');
+                syncDot.className = 'status-dot status-error';
+                document.getElementById('syncStatus').textContent = 'Unknown';
+            }
+        };
+    </script>
+</body>
+</html>

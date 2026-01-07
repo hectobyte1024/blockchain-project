@@ -57,8 +57,13 @@ impl UTXO {
             return true; // Regular transactions are immediately spendable
         }
         
-        // Coinbase outputs need 100 confirmations
-        current_height >= self.block_height + 100
+        // Genesis block coinbase is immediately spendable
+        if self.block_height == 0 {
+            return true;
+        }
+        
+        // Coinbase outputs need 10 confirmations (for development; production should be 100)
+        current_height >= self.block_height + 10
     }
 
     /// Get the value of this UTXO
@@ -68,13 +73,8 @@ impl UTXO {
 
     /// Extract address from script (simplified)
     pub fn get_address(&self) -> Option<String> {
-        // For now, return a simplified address
-        // In a real implementation, this would parse the script
-        if self.output.script_pubkey.len() >= 25 {
-            Some(format!("edu1q{}", hex::encode(&self.output.script_pubkey[3..23])))
-        } else {
-            None
-        }
+        // Use TransactionOutput's get_address method
+        self.output.get_address()
     }
 }
 
@@ -144,10 +144,13 @@ impl UTXOSet {
             
             // Update address index
             if let Some(address) = utxo.get_address() {
+                tracing::debug!("Adding UTXO {} for address: {}", outpoint, address);
                 self.address_index
                     .entry(address)
                     .or_insert_with(Vec::new)
                     .push(outpoint.clone());
+            } else {
+                tracing::warn!("UTXO {} has no extractable address", outpoint);
             }
 
             self.total_supply += utxo.value();
@@ -187,6 +190,11 @@ impl UTXOSet {
     /// Get current blockchain height
     pub fn get_current_height(&self) -> u64 {
         self.current_height as u64
+    }
+    
+    /// Set current blockchain height (for maturity checks)
+    pub fn set_current_height(&mut self, height: u32) {
+        self.current_height = height;
     }
 
     /// Check if a UTXO exists and is spendable
@@ -282,6 +290,11 @@ impl UTXOSet {
     /// Get total number of UTXOs
     pub fn get_utxo_count(&self) -> usize {
         self.utxos.len()
+    }
+
+    /// Get all addresses in the index (for debugging)
+    pub fn get_all_addresses(&self) -> Vec<String> {
+        self.address_index.keys().cloned().collect()
     }
 
     /// Add a single UTXO (used by consensus module)

@@ -2,8 +2,20 @@
 
 use crate::{BlockchainError, Result, Hash256, BlockHeight, Timestamp};
 use crate::transaction::{Transaction, TransactionInput, TransactionOutput, UTXO, UTXOSet};
-use blockchain_ffi::types::Hash256Wrapper;
 use serde::{Deserialize, Serialize};
+use tracing::info;
+
+/// Simplified block header information for Initial Block Download
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BlockHeaderInfo {
+    pub height: BlockHeight,
+    pub hash: Hash256,
+    pub prev_hash: Hash256,
+    pub merkle_root: Hash256,
+    pub timestamp: Timestamp,
+    pub difficulty: u32,
+    pub nonce: u32,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BlockHeader {
@@ -93,16 +105,9 @@ impl Block {
         
         let tx_hashes: Vec<Hash256> = self.transactions
             .iter()
-            .map(|tx| {
-                let txid_hex = tx.get_txid();
-                let txid_bytes = hex::decode(&txid_hex).unwrap_or_default();
-                let mut hash = [0u8; 32];
-                if txid_bytes.len() == 32 {
-                    hash.copy_from_slice(&txid_bytes);
-                }
-                hash
-            }).collect();
-            
+            .map(|tx| tx.calculate_hash())
+            .collect();
+        
         Self::compute_merkle_root(tx_hashes)
     }
 
@@ -133,7 +138,7 @@ impl Block {
         Ok(data)
     }
     
-    fn compute_merkle_root(mut hashes: Vec<Hash256>) -> Hash256 {
+    pub fn compute_merkle_root(mut hashes: Vec<Hash256>) -> Hash256 {
         if hashes.is_empty() {
             return [0u8; 32];
         }
@@ -163,7 +168,7 @@ impl Block {
         
         let coinbase_tx = Transaction::new(
             1,
-            vec![TransactionInput::new(Hash256Wrapper::from_hash256(&[0u8; 32]), u32::MAX, genesis_message.as_bytes().to_vec())],
+            vec![TransactionInput::new([0u8; 32], u32::MAX, genesis_message.as_bytes().to_vec())],
             vec![TransactionOutput::new(5_000_000_000, genesis_script)],
         );
         

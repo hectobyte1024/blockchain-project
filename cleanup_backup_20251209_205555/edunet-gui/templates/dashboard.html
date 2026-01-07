@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduNet - University Blockchain Platform</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="/static/js/shared.js"></script>
+    <script src="/static/js/web-blockchain-client.js"></script>
+    <style>
+        .network-status { display: flex; align-items: center; margin-bottom: 20px; }
+        .status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .status-online { background: #4CAF50; }
+        .status-mining { background: #FF9800; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .blockchain-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .blockchain-stat { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 8px; text-align: center; }
+        .blockchain-stat .number { font-size: 1.8em; font-weight: bold; }
+        .blockchain-stat .label { opacity: 0.9; font-size: 0.9em; }
+        .real-time-feed { background: #f8f9fa; padding: 15px; border-radius: 8px; max-height: 200px; overflow-y: auto; }
+        .real-time-feed .update { padding: 5px 0; border-bottom: 1px solid #e9ecef; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Edunet</span>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item active">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/marketplace" class="nav-link">
+                        <i class="fas fa-store"></i>
+                        <span>Marketplace</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/loans" class="nav-link">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <span>Loans</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/nfts" class="nav-link">
+                        <i class="fas fa-palette"></i>
+                        <span>NFTs</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/invest" class="nav-link">
+                        <i class="fas fa-rocket"></i>
+                        <span>Invest</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/wallet" class="nav-link">
+                        <i class="fas fa-wallet"></i>
+                        <span>Wallet</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="sidebar-user-name">Loading...</div>
+                        <div class="user-university" id="sidebar-user-university">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1>Dashboard</h1>
+                    <p>Bienvenido de nuevo a la plataforma Edunet</p>
+                </div>
+                <div class="header-right">
+                    <div class="wallet-info">
+                        <i class="fas fa-wallet"></i>
+                        <span class="balance" id="wallet-balance">Loading...</span>
+                    </div>
+                    <div class="notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notification-count">0</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon students">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-students">0</h3>
+                        <p>Active Users</p>
+                        <span class="stat-change neutral">Single-user system</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon marketplace">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="active-listings">0</h3>
+                        <p>Marketplace Items</p>
+                        <span class="stat-change neutral">Empty marketplace</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon loans">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-loans">0</h3>
+                        <p>Loan System</p>
+                        <span class="stat-change neutral">Feature coming soon</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon nfts">
+                        <i class="fas fa-gem"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="minted-nfts">0</h3>
+                        <p>NFT Collection</p>
+                        <span class="stat-change neutral">Feature coming soon</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Recent Activity -->
+                <div class="activity-panel">
+                    <div class="panel-header">
+                        <h3>Recent Activity</h3>
+                        <button class="btn-secondary">View All</button>
+                    </div>
+                    <div class="activity-list" id="recent-activity">
+                                                <div id="recent-activities">
+                            <!-- Activities will be loaded dynamically by JavaScript -->
+                            <div class="activity-item loading-placeholder">
+                                <div class="activity-icon">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <p>Loading recent activity...</p>
+                                    <span class="activity-time">Please wait</span>
+                                </div>
+                                <div class="activity-amount">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions-panel">
+                    <div class="panel-header">
+                        <h3>Quick Actions</h3>
+                    </div>
+                    <div class="quick-actions-grid">
+                        <button class="quick-action-btn marketplace" onclick="window.location.href='/marketplace'">
+                            <i class="fas fa-plus"></i>
+                            <span>Sell Item</span>
+                        </button>
+                        
+                        <button class="quick-action-btn loans" onclick="window.location.href='/loans'">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Apply for Loan</span>
+                        </button>
+                        
+                        <button class="quick-action-btn nfts" onclick="window.location.href='/nfts'">
+                            <i class="fas fa-paint-brush"></i>
+                            <span>Mint NFT</span>
+                        </button>
+                        
+                        <button class="quick-action-btn investment" onclick="window.location.href='/invest'">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Start Project</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Portfolio Overview -->
+                <div class="portfolio-panel">
+                    <div class="panel-header">
+                        <h3>Portfolio Overview</h3>
+                        <select class="time-filter">
+                            <option>Last 7 days</option>
+                            <option>Last 30 days</option>
+                            <option>Last 3 months</option>
+                        </select>
+                    </div>
+                    <div class="portfolio-chart">
+                        <canvas id="portfolio-chart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="portfolio-stats">
+                        <div class="portfolio-stat">
+                            <span class="stat-label">Total Value</span>
+                            <span class="stat-value" id="total-portfolio-value">Loading...</span>
+                            <span class="stat-change" id="portfolio-change">--</span>
+                        </div>
+                        <div class="portfolio-stat">
+                            <span class="stat-label">Monthly Profit</span>
+                            <span class="stat-value" id="monthly-profit">Loading...</span>
+                            <span class="stat-change" id="monthly-change">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Performers -->
+                <div class="performers-panel">
+                    <div class="panel-header">
+                        <h3>Top Performers</h3>
+                        <div class="tabs">
+                            <button class="tab-btn active" data-tab="students">Students</button>
+                            <button class="tab-btn" data-tab="items">Items</button>
+                            <button class="tab-btn" data-tab="projects">Projects</button>
+                        </div>
+                    </div>
+                    <div class="performers-list" id="performers-list">
+                        <div id="top-performers-list">
+                            <!-- Top performers will be loaded dynamically -->
+                            <div class="performer-item loading-placeholder">
+                                <div class="performer-rank">--</div>
+                                <div class="performer-avatar">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                                <div class="performer-info">
+                                    <div class="performer-name">Loading top performers...</div>
+                                    <div class="performer-detail">Please wait</div>
+                                </div>
+                                <div class="performer-score">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script>
+        // Initialize global EdunetApp
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof EdunetApp !== 'undefined') {
+                window.edunetApp = new EdunetApp();
+                console.log('EdunetApp initialized successfully');
+            } else {
+                console.error('EdunetApp class not found - shared.js may not have loaded');
+            }
+        });
+    </script>
+</body>
+</html>

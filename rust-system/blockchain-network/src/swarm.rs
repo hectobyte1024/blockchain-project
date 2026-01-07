@@ -9,7 +9,7 @@ use crate::{
     protocol::{Message, NetworkAddress, services},
     discovery::{AddressManager, PeerAddress},
 };
-use blockchain_core::{Hash256, block::Block, transaction::Transaction};
+use blockchain_core::{Hash256, block::Block, transaction::Transaction, consensus::ConsensusValidator};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -145,6 +145,8 @@ pub struct NetworkSwarm {
     our_services: u64,
     /// Our listening port
     listening_port: u16,
+    /// Blockchain consensus validator (optional - for serving blockchain data)
+    consensus: Option<Arc<ConsensusValidator>>,
 }
 
 /// Internal swarm events
@@ -177,6 +179,7 @@ impl NetworkSwarm {
         address_manager: Arc<AddressManager>,
         our_services: u64,
         listening_port: u16,
+        consensus: Option<Arc<ConsensusValidator>>,
     ) -> (Self, broadcast::Receiver<NetworkEvent>) {
         let (event_sender, event_receiver) = broadcast::channel(1000);
         let (internal_sender, internal_receiver) = mpsc::channel(1000);
@@ -190,6 +193,7 @@ impl NetworkSwarm {
             stats: RwLock::new(SwarmStats::default()),
             our_services,
             listening_port,
+            consensus,
         };
 
         (swarm, event_receiver)
@@ -591,6 +595,34 @@ impl NetworkSwarm {
                 // Handle data requests
                 self.handle_get_data_request(peer_id, get_data_msg).await?;
             }
+            crate::protocol::MessagePayload::GetBlockchainHeight => {
+                // Handle blockchain height request
+                self.handle_get_blockchain_height(peer_id).await?;
+            }
+            crate::protocol::MessagePayload::BlockchainHeight(height_msg) => {
+                // Blockchain height response (processed by sync engine)
+                debug!("Received blockchain height {} from peer {}", height_msg.height, peer_id);
+            }
+            crate::protocol::MessagePayload::GetBlockByHeight(req) => {
+                // Handle block request by height
+                self.handle_get_block_by_height(peer_id, req.height).await?;
+            }
+            crate::protocol::MessagePayload::BlockData(block_msg) => {
+                // Block data response (processed by sync engine)
+                debug!("Received block data at height {} from peer {}", block_msg.height, peer_id);
+            }
+            crate::protocol::MessagePayload::GetHeaders(headers_req) => {
+                // Handle headers request
+                self.handle_get_headers(peer_id, headers_req).await?;
+            }
+            crate::protocol::MessagePayload::Headers(headers_msg) => {
+                // Headers response (processed by sync engine)
+                debug!("Received {} headers from peer {}", headers_msg.count, peer_id);
+            }
+            crate::protocol::MessagePayload::NotFound(not_found) => {
+                // Block or transaction not found
+                debug!("Peer {} reported not found: {:?}", peer_id, not_found.item_type);
+            }
             _ => {
                 // Other messages handled by peer directly
                 debug!("Received message type from peer {}: {:?}", peer_id, message);
@@ -642,6 +674,94 @@ impl NetworkSwarm {
             }
         }
         
+        Ok(())
+    }
+
+    /// Handle GetBlockchainHeight request - send our current blockchain height
+    async fn handle_get_blockchain_height(&self, peer_id: Uuid) -> Result<()> {
+        // Get actual blockchain height from consensus
+        let (height, best_block_hash, total_work) = if let Some(ref consensus) = self.consensus {
+            let chain_state = consensus.get_chain_state().await;
+            (chain_state.height, chain_state.best_block_hash, chain_state.total_work)
+        } else {
+            // No blockchain connected - return zeros
+            (0u64, [0u8; 32], 0u64)
+        };
+        
+        let response = Message::blockchain_height(height, best_block_hash, total_work);
+        self.send_to_peer(peer_id, response).await?;
+        
+        debug!("Sent blockchain height {} to peer {}", height, peer_id);
+        Ok(())
+    }
+
+    /// Handle GetBlockByHeight request - send requested block
+    async fn handle_get_block_by_height(&self, peer_id: Uuid, height: u64) -> Result<()> {
+        use crate::protocol::NotFoundType;
+        
+        // Try to get block from consensus
+        if let Some(ref consensus) = self.consensus {
+            if let Some(block) = consensus.get_block_by_height(height).await {
+                // Serialize block
+                let block_data = bincode::serialize(&block)
+                    .map_err(|e| NetworkError::SerializationError(e.to_string()))?;
+                let block_hash = block.header.calculate_hash();
+                
+                let response = Message::block_data(height, block_hash, block_data);
+                self.send_to_peer(peer_id, response).await?;
+                
+                debug!("Sent block at height {} to peer {}", height, peer_id);
+                return Ok(());
+            }
+        }
+        
+        // Block not found
+        let not_found = Message::not_found(NotFoundType::Block, height.to_le_bytes().to_vec());
+        self.send_to_peer(peer_id, not_found).await?;
+        
+        debug!("Block at height {} not found, sent NotFound to peer {}", height, peer_id);
+        Ok(())
+    }
+
+    /// Handle GetHeaders request - send block headers
+    async fn handle_get_headers(
+        &self,
+        peer_id: Uuid,
+        request: &crate::protocol::GetHeadersMessage,
+    ) -> Result<()> {
+        // Get headers from consensus
+        let headers = if let Some(ref consensus) = self.consensus {
+            consensus.get_block_headers(
+                request.start_height,
+                request.end_height,
+                request.stop_hash,
+            ).await.unwrap_or_else(|e| {
+                warn!("Failed to get headers: {}", e);
+                vec![]
+            })
+        } else {
+            vec![]
+        };
+        
+        // Convert to protocol format
+        let headers_len = headers.len();
+        let protocol_headers: Vec<crate::protocol::BlockHeaderInfo> = headers.into_iter()
+            .map(|h| crate::protocol::BlockHeaderInfo {
+                height: h.height,
+                hash: h.hash,
+                prev_hash: h.prev_hash,
+                merkle_root: h.merkle_root,
+                timestamp: h.timestamp,
+                difficulty: h.difficulty,
+                nonce: h.nonce,
+            })
+            .collect();
+        
+        let response = Message::headers(protocol_headers);
+        self.send_to_peer(peer_id, response).await?;
+        
+        debug!("Sent {} headers to peer {} (range {}-{})", 
+               headers_len, peer_id, request.start_height, request.end_height);
         Ok(())
     }
 

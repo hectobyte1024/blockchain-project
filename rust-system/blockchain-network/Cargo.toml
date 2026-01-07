@@ -8,7 +8,6 @@ license.workspace = true
 [dependencies]
 # Core blockchain types
 blockchain-core = { path = "../blockchain-core" }
-blockchain-ffi = { path = "../blockchain-ffi" }
 
 # Async networking
 tokio = { workspace = true, features = ["full"] }
