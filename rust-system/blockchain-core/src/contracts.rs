@@ -3,6 +3,7 @@
 //! Integrates revm (Rust EVM) for Ethereum-compatible smart contracts
 
 use crate::{BlockchainError, Result, Hash256, Address as BlockchainAddress};
+use crate::event_indexer::{EventIndexer, IndexedEvent};
 use revm::{
     primitives::{Address, Bytecode, TransactTo, TxEnv, U256, B256, Bytes},
     Database, DatabaseCommit, InMemoryDB, Evm,
@@ -157,6 +158,8 @@ pub struct ContractExecutor {
     balances: Arc<RwLock<HashMap<String, u64>>>,
     /// Storage path for contract persistence
     storage_path: PathBuf,
+    /// Event indexer
+    event_indexer: Arc<EventIndexer>,
 }
 
 impl ContractExecutor {
@@ -171,6 +174,7 @@ impl ContractExecutor {
             contracts: Arc::new(RwLock::new(HashMap::new())),
             balances: Arc::new(RwLock::new(HashMap::new())),
             storage_path: path.as_ref().to_path_buf(),
+            event_indexer: Arc::new(EventIndexer::new()),
         }
     }
     
@@ -310,6 +314,7 @@ impl ContractExecutor {
                 };
                 
                 // Store contract if deployment succeeded
+                let bytecode_copy = bytecode.clone();
                 if let Some(addr) = contract_address {
                     let contract = ContractAccount {
                         address: EthAddress::from_address(addr),
@@ -329,15 +334,27 @@ impl ContractExecutor {
                     }
                 }
                 
+                let result_logs = logs.into_iter().map(|log| Log {
+                    address: EthAddress::from_address(log.address),
+                    topics: log.topics().iter().map(|t| hex::encode(t)).collect(),
+                    data: log.data.data.to_vec(),
+                }).collect::<Vec<_>>();
+                
+                // Index events (deployment)
+                if let Some(addr) = contract_address {
+                    let tx_hash = hex::encode(&bytecode_copy[..32.min(bytecode_copy.len())]);
+                    self.event_indexer.index_events(
+                        result_logs.clone(), 
+                        0, // Block height will be set by caller
+                        tx_hash
+                    ).await;
+                }
+                
                 ExecutionResult {
                     success: true,
                     gas_used,
                     return_data: Vec::new(),
-                    logs: logs.into_iter().map(|log| Log {
-                        address: EthAddress::from_address(log.address),
-                        topics: log.topics().iter().map(|t| hex::encode(t)).collect(),
-                        data: log.data.data.to_vec(),
-                    }).collect(),
+                    logs: result_logs,
                     contract_address: contract_address.map(EthAddress::from_address),
                     error: None,
                 }
@@ -441,15 +458,25 @@ impl ContractExecutor {
                     _ => Vec::new(),
                 };
                 
+                let result_logs = logs.into_iter().map(|log| Log {
+                    address: EthAddress::from_address(log.address),
+                    topics: log.topics().iter().map(|t| hex::encode(t)).collect(),
+                    data: log.data.data.to_vec(),
+                }).collect::<Vec<_>>();
+                
+                // Index events (contract call)
+                let tx_hash = format!("{}_{}", caller, hex::encode(contract_address.as_bytes()));
+                self.event_indexer.index_events(
+                    result_logs.clone(), 
+                    0, // Block height will be set by caller
+                    tx_hash
+                ).await;
+                
                 ExecutionResult {
                     success: true,
                     gas_used,
                     return_data,
-                    logs: logs.into_iter().map(|log| Log {
-                        address: EthAddress::from_address(log.address),
-                        topics: log.topics().iter().map(|t| hex::encode(t)).collect(),
-                        data: log.data.data.to_vec(),
-                    }).collect(),
+                    logs: result_logs,
                     contract_address: None,
                     error: None,
                 }
@@ -507,6 +534,11 @@ impl ContractExecutor {
     /// Get account balance
     pub async fn get_balance(&self, address: &str) -> u64 {
         *self.balances.read().await.get(address).unwrap_or(&0)
+    }
+    
+    /// Get event indexer reference
+    pub fn event_indexer(&self) -> Arc<EventIndexer> {
+        Arc::clone(&self.event_indexer)
     }
 }
 

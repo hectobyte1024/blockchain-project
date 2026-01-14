@@ -310,4 +310,31 @@ impl BlockchainBackend {
             .await
             .map(|contract| contract.code)
     }
+    
+    /// Query contract events with filter
+    pub async fn query_events(
+        &self,
+        filter: blockchain_core::event_indexer::EventFilter,
+    ) -> Vec<blockchain_core::event_indexer::IndexedEvent> {
+        let indexer = self.contract_executor.event_indexer();
+        indexer.query_events(filter).await
+    }
+    
+    /// Get events by block height
+    pub async fn get_events_by_block(
+        &self,
+        block_height: u64,
+    ) -> Vec<blockchain_core::event_indexer::IndexedEvent> {
+        let indexer = self.contract_executor.event_indexer();
+        indexer.get_events_by_block(block_height).await
+    }
+    
+    /// Get events by contract address
+    pub async fn get_events_by_address(
+        &self,
+        contract_address: blockchain_core::contracts::EthAddress,
+    ) -> Vec<blockchain_core::event_indexer::IndexedEvent> {
+        let indexer = self.contract_executor.event_indexer();
+        indexer.get_events_by_address(contract_address).await
+    }
 }

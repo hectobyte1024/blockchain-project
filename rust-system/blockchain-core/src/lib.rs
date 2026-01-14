@@ -195,3 +195,4 @@ pub mod script_utils;
 pub mod sync;
 pub mod storage;
 pub mod contracts;  // Smart contract execution (EVM)
+pub mod event_indexer;  // Event indexing and filtering

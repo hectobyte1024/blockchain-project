@@ -436,7 +436,142 @@ fn create_blockchain_rpc_server(
         });
     }
     
-    info!("📋 Registered RPC methods: blockchain_getBlockHeight, blockchain_getBlock, wallet_getBalance, wallet_list, blockchain_getStatus, treasury_getPrice, treasury_setPrice, treasury_sellCoins, treasury_getStats, treasury_getSales, contract_deploy, contract_call, contract_getCode");
+    // Get logs (events) with filter
+    {
+        let bc = blockchain.clone();
+        handler.add_sync_method("contract_getLogs", move |params: Params| {
+            let bc = bc.clone();
+            let parsed: serde_json::Map<String, Value> = params.parse()?;
+            
+            // Parse filter parameters
+            let address = parsed.get("address")
+                .and_then(|v| v.as_str())
+                .and_then(|s| hex::decode(s).ok())
+                .and_then(|bytes| {
+                    if bytes.len() == 20 {
+                        let mut addr = [0u8; 20];
+                        addr.copy_from_slice(&bytes);
+                        Some(blockchain_core::contracts::EthAddress::new(addr))
+                    } else {
+                        None
+                    }
+                });
+            
+            let from_block = parsed.get("fromBlock").and_then(|v| v.as_u64());
+            let to_block = parsed.get("toBlock").and_then(|v| v.as_u64());
+            
+            let topics = parsed.get("topics")
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    arr.iter().map(|t| {
+                        if t.is_null() {
+                            None
+                        } else {
+                            t.as_array().map(|inner| {
+                                inner.iter()
+                                    .filter_map(|s| s.as_str().map(String::from))
+                                    .collect::<Vec<_>>()
+                            })
+                        }
+                    }).collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
+            
+            let filter = blockchain_core::event_indexer::EventFilter {
+                address,
+                topics,
+                from_block,
+                to_block,
+            };
+            
+            let events = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(async {
+                    bc.query_events(filter).await
+                })
+            });
+            
+            Ok(json!({
+                "logs": events.iter().map(|e| json!({
+                    "address": hex::encode(e.log.address.as_bytes()),
+                    "topics": e.log.topics,
+                    "data": hex::encode(&e.log.data),
+                    "blockHeight": e.block_height,
+                    "transactionHash": e.tx_hash,
+                    "logIndex": e.log_index,
+                })).collect::<Vec<_>>()
+            }))
+        });
+    }
+    
+    // Get events by block height
+    {
+        let bc = blockchain.clone();
+        handler.add_sync_method("contract_getEventsByBlock", move |params: Params| {
+            let bc = bc.clone();
+            let parsed: Vec<u64> = params.parse()?;
+            if parsed.is_empty() {
+                return Err(jsonrpc_core::Error::invalid_params("Missing block height"));
+            }
+            
+            let events = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(async {
+                    bc.get_events_by_block(parsed[0]).await
+                })
+            });
+            
+            Ok(json!({
+                "events": events.iter().map(|e| json!({
+                    "address": hex::encode(e.log.address.as_bytes()),
+                    "topics": e.log.topics,
+                    "data": hex::encode(&e.log.data),
+                    "blockHeight": e.block_height,
+                    "transactionHash": e.tx_hash,
+                    "logIndex": e.log_index,
+                })).collect::<Vec<_>>()
+            }))
+        });
+    }
+    
+    // Get events by contract address
+    {
+        let bc = blockchain.clone();
+        handler.add_sync_method("contract_getEventsByAddress", move |params: Params| {
+            let bc = bc.clone();
+            let parsed: serde_json::Map<String, Value> = params.parse()?;
+            
+            let contract_hex = parsed.get("address")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| jsonrpc_core::Error::invalid_params("Missing contract address"))?;
+                
+            let contract_bytes = hex::decode(contract_hex)
+                .map_err(|_| jsonrpc_core::Error::invalid_params("Invalid contract address hex"))?;
+            if contract_bytes.len() != 20 {
+                return Err(jsonrpc_core::Error::invalid_params("Contract address must be 20 bytes"));
+            }
+            let mut contract_addr = [0u8; 20];
+            contract_addr.copy_from_slice(&contract_bytes);
+            let contract_address = blockchain_core::contracts::EthAddress::new(contract_addr);
+            
+            let events = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(async {
+                    bc.get_events_by_address(contract_address).await
+                })
+            });
+            
+            Ok(json!({
+                "events": events.iter().map(|e| json!({
+                    "address": hex::encode(e.log.address.as_bytes()),
+                    "topics": e.log.topics,
+                    "data": hex::encode(&e.log.data),
+                    "blockHeight": e.block_height,
+                    "transactionHash": e.tx_hash,
+                    "logIndex": e.log_index,
+                })).collect::<Vec<_>>()
+            }))
+        });
+    }
+    
+    info!("📋 Registered RPC methods: blockchain_getBlockHeight, blockchain_getBlock, wallet_getBalance, wallet_list, blockchain_getStatus, treasury_getPrice, treasury_setPrice, treasury_sellCoins, treasury_getStats, treasury_getSales, contract_deploy, contract_call, contract_getCode, contract_getLogs, contract_getEventsByBlock, contract_getEventsByAddress");
     RpcServer::with_custom_handler(config, handler)
 }
 
