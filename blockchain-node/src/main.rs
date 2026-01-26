@@ -571,7 +571,277 @@ fn create_blockchain_rpc_server(
         });
     }
     
-    info!("📋 Registered RPC methods: blockchain_getBlockHeight, blockchain_getBlock, wallet_getBalance, wallet_list, blockchain_getStatus, treasury_getPrice, treasury_setPrice, treasury_sellCoins, treasury_getStats, treasury_getSales, contract_deploy, contract_call, contract_getCode, contract_getLogs, contract_getEventsByBlock, contract_getEventsByAddress");
+    // Web3-compatible: eth_getLogs (same as contract_getLogs but Web3 format)
+    {
+        let bc = blockchain.clone();
+        handler.add_sync_method("eth_getLogs", move |params: Params| {
+            let bc = bc.clone();
+            let parsed: Vec<serde_json::Map<String, Value>> = params.parse()?;
+            if parsed.is_empty() {
+                return Err(jsonrpc_core::Error::invalid_params("Missing filter object"));
+            }
+            let filter_obj = &parsed[0];
+            
+            // Parse filter parameters
+            let address = filter_obj.get("address")
+                .and_then(|v| v.as_str())
+                .and_then(|s| {
+                    let stripped = s.strip_prefix("0x").unwrap_or(s);
+                    hex::decode(stripped).ok()
+                })
+                .and_then(|bytes| {
+                    if bytes.len() == 20 {
+                        let mut addr = [0u8; 20];
+                        addr.copy_from_slice(&bytes);
+                        Some(blockchain_core::contracts::EthAddress::new(addr))
+                    } else {
+                        None
+                    }
+                });
+            
+            let from_block = filter_obj.get("fromBlock")
+                .and_then(|v| {
+                    if let Some(s) = v.as_str() {
+                        if s == "latest" { return Some(u64::MAX); }
+                        if s == "earliest" { return Some(0); }
+                        let stripped = s.strip_prefix("0x").unwrap_or(s);
+                        u64::from_str_radix(stripped, 16).ok()
+                    } else {
+                        v.as_u64()
+                    }
+                });
+            
+            let to_block = filter_obj.get("toBlock")
+                .and_then(|v| {
+                    if let Some(s) = v.as_str() {
+                        if s == "latest" { return Some(u64::MAX); }
+                        if s == "earliest" { return Some(0); }
+                        let stripped = s.strip_prefix("0x").unwrap_or(s);
+                        u64::from_str_radix(stripped, 16).ok()
+                    } else {
+                        v.as_u64()
+                    }
+                });
+            
+            let topics = filter_obj.get("topics")
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    arr.iter().map(|t| {
+                        if t.is_null() {
+                            None
+                        } else {
+                            t.as_array().map(|inner| {
+                                inner.iter()
+                                    .filter_map(|s| {
+                                        s.as_str().map(|str_val| {
+                                            str_val.strip_prefix("0x")
+                                                .unwrap_or(str_val)
+                                                .to_string()
+                                        })
+                                    })
+                                    .collect::<Vec<_>>()
+                            })
+                        }
+                    }).collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
+            
+            let filter = blockchain_core::event_indexer::EventFilter {
+                address,
+                topics,
+                from_block,
+                to_block,
+            };
+            
+            let events = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(async {
+                    bc.query_events(filter).await
+                })
+            });
+            
+            // Return Web3-compatible format
+            Ok(Value::Array(events.iter().map(|e| json!({
+                "address": format!("0x{}", hex::encode(e.log.address.as_bytes())),
+                "topics": e.log.topics.iter().map(|t| format!("0x{}", t)).collect::<Vec<_>>(),
+                "data": format!("0x{}", hex::encode(&e.log.data)),
+                "blockNumber": format!("0x{:x}", e.block_height),
+                "transactionHash": format!("0x{}", e.tx_hash),
+                "transactionIndex": "0x0",
+                "blockHash": format!("0x{:064x}", e.block_height),
+                "logIndex": format!("0x{:x}", e.log_index),
+                "removed": false,
+            })).collect::<Vec<_>>()))
+        });
+    }
+    
+    // Web3-compatible: eth_call (read-only contract execution)
+    {
+        let bc = blockchain.clone();
+        handler.add_sync_method("eth_call", move |params: Params| {
+            let bc = bc.clone();
+            let parsed: Vec<Value> = params.parse()?;
+            if parsed.is_empty() {
+                return Err(jsonrpc_core::Error::invalid_params("Missing transaction object"));
+            }
+            
+            let tx_obj = parsed[0].as_object()
+                .ok_or_else(|| jsonrpc_core::Error::invalid_params("Transaction must be an object"))?;
+            
+            let to = tx_obj.get("to")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| jsonrpc_core::Error::invalid_params("Missing 'to' address"))?;
+            let to_stripped = to.strip_prefix("0x").unwrap_or(to);
+            let to_bytes = hex::decode(to_stripped)
+                .map_err(|_| jsonrpc_core::Error::invalid_params("Invalid 'to' address"))?;
+            if to_bytes.len() != 20 {
+                return Err(jsonrpc_core::Error::invalid_params("'to' address must be 20 bytes"));
+            }
+            let mut contract_addr = [0u8; 20];
+            contract_addr.copy_from_slice(&to_bytes);
+            let contract_address = blockchain_core::contracts::EthAddress::new(contract_addr);
+            
+            let data = tx_obj.get("data")
+                .and_then(|v| v.as_str())
+                .map(|s| {
+                    let stripped = s.strip_prefix("0x").unwrap_or(s);
+                    hex::decode(stripped).unwrap_or_default()
+                })
+                .unwrap_or_default();
+            
+            let from = tx_obj.get("from")
+                .and_then(|v| v.as_str())
+                .unwrap_or("eth1qReadOnlyCall00000000000000");
+            
+            let value = tx_obj.get("value")
+                .and_then(|v| {
+                    if let Some(s) = v.as_str() {
+                        let stripped = s.strip_prefix("0x").unwrap_or(s);
+                        u64::from_str_radix(stripped, 16).ok()
+                    } else {
+                        v.as_u64()
+                    }
+                })
+                .unwrap_or(0);
+            
+            let result = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(async {
+                    bc.call_contract(from, contract_address, data, value, 10_000_000).await
+                })
+            });
+            
+            match result {
+                Ok(exec_result) => {
+                    if exec_result.success {
+                        Ok(Value::String(format!("0x{}", hex::encode(&exec_result.return_data))))
+                    } else {
+                        Err(jsonrpc_core::Error {
+                            code: jsonrpc_core::ErrorCode::ServerError(3),
+                            message: exec_result.error.unwrap_or_else(|| "Execution reverted".to_string()),
+                            data: Some(Value::String(format!("0x{}", hex::encode(&exec_result.return_data)))),
+                        })
+                    }
+                }
+                Err(e) => Err(jsonrpc_core::Error::internal_error()),
+            }
+        });
+    }
+    
+    // Web3-compatible: eth_estimateGas
+    {
+        let bc = blockchain.clone();
+        handler.add_sync_method("eth_estimateGas", move |params: Params| {
+            let bc = bc.clone();
+            let parsed: Vec<Value> = params.parse()?;
+            if parsed.is_empty() {
+                return Err(jsonrpc_core::Error::invalid_params("Missing transaction object"));
+            }
+            
+            let tx_obj = parsed[0].as_object()
+                .ok_or_else(|| jsonrpc_core::Error::invalid_params("Transaction must be an object"))?;
+            
+            // For deployment (no 'to' field), estimate ~100k gas
+            if tx_obj.get("to").is_none() {
+                return Ok(Value::String("0x186a0".to_string())); // 100000 in hex
+            }
+            
+            let to = tx_obj.get("to")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| jsonrpc_core::Error::invalid_params("Missing 'to' address"))?;
+            let to_stripped = to.strip_prefix("0x").unwrap_or(to);
+            let to_bytes = hex::decode(to_stripped)
+                .map_err(|_| jsonrpc_core::Error::invalid_params("Invalid 'to' address"))?;
+            if to_bytes.len() != 20 {
+                return Err(jsonrpc_core::Error::invalid_params("'to' address must be 20 bytes"));
+            }
+            let mut contract_addr = [0u8; 20];
+            contract_addr.copy_from_slice(&to_bytes);
+            let contract_address = blockchain_core::contracts::EthAddress::new(contract_addr);
+            
+            let data = tx_obj.get("data")
+                .and_then(|v| v.as_str())
+                .map(|s| {
+                    let stripped = s.strip_prefix("0x").unwrap_or(s);
+                    hex::decode(stripped).unwrap_or_default()
+                })
+                .unwrap_or_default();
+            
+            let from = tx_obj.get("from")
+                .and_then(|v| v.as_str())
+                .unwrap_or("eth1qGasEstimation000000000000000");
+            
+            let value = tx_obj.get("value")
+                .and_then(|v| {
+                    if let Some(s) = v.as_str() {
+                        let stripped = s.strip_prefix("0x").unwrap_or(s);
+                        u64::from_str_radix(stripped, 16).ok()
+                    } else {
+                        v.as_u64()
+                    }
+                })
+                .unwrap_or(0);
+            
+            // Execute with high gas limit to get actual gas used
+            let result = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(async {
+                    bc.call_contract(from, contract_address, data, value, 10_000_000).await
+                })
+            });
+            
+            match result {
+                Ok(exec_result) => {
+                    // Add 20% buffer to gas used
+                    let estimated_gas = (exec_result.gas_used as f64 * 1.2) as u64;
+                    Ok(Value::String(format!("0x{:x}", estimated_gas)))
+                }
+                Err(_) => {
+                    // If estimation fails, return conservative estimate
+                    Ok(Value::String("0x30d40".to_string())) // 200000 in hex
+                }
+            }
+        });
+    }
+    
+    // Web3-compatible: eth_blockNumber
+    {
+        let bc = blockchain.clone();
+        handler.add_sync_method("eth_blockNumber", move |_params: Params| {
+            let bc = bc.clone();
+            let height = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(async {
+                    bc.get_height().await
+                })
+            });
+            Ok(Value::String(format!("0x{:x}", height)))
+        });
+    }
+    
+    info!("📋 Registered RPC methods:");
+    info!("   Blockchain: blockchain_getBlockHeight, blockchain_getBlock, blockchain_getStatus");
+    info!("   Wallet: wallet_getBalance, wallet_list, debug_listAddresses, debug_dumpUtxos");
+    info!("   Treasury: treasury_getPrice, treasury_setPrice, treasury_sellCoins, treasury_getStats, treasury_getSales");
+    info!("   Contracts: contract_deploy, contract_call, contract_getCode");
+    info!("   Events: contract_getLogs, contract_getEventsByBlock, contract_getEventsByAddress");
+    info!("   Web3: eth_getLogs, eth_call, eth_estimateGas, eth_blockNumber");
     RpcServer::with_custom_handler(config, handler)
 }
 
