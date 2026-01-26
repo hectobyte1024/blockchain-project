@@ -395,8 +395,21 @@ impl ContractExecutor {
     ) -> Result<ExecutionResult> {
         // Get contract code
         let contracts = self.contracts.read().await;
-        let contract = contracts.get(&contract_address)
-            .ok_or_else(|| BlockchainError::ContractNotFound(format!("{:?}", contract_address)))?;
+        
+        // If contract doesn't exist, return empty result (for eth_call compatibility)
+        let contract = match contracts.get(&contract_address) {
+            Some(c) => c,
+            None => {
+                return Ok(ExecutionResult {
+                    success: false,
+                    gas_used: 0,
+                    return_data: Vec::new(),
+                    logs: Vec::new(),
+                    contract_address: None,
+                    error: Some("Contract not found".to_string()),
+                });
+            }
+        };
         
         let caller_addr = self.edu_to_eth_address(caller)?;
         let eth_contract_addr = contract_address.to_address();
