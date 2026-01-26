@@ -196,3 +196,4 @@ pub mod sync;
 pub mod storage;
 pub mod contracts;  // Smart contract execution (EVM)
 pub mod event_indexer;  // Event indexing and filtering
+pub mod precompiles;  // Ethereum precompiled contracts

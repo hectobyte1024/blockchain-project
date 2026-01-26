@@ -40,6 +40,8 @@ num_cpus = "1.16"
 # Smart Contract dependencies
 revm = { version = "14", features = ["std", "secp256k1"] }
 revm-primitives = "9"
+ripemd = "0.1"
+sha3 = "0.10"
 
 # API Server dependencies
 md5 = "0.7"
